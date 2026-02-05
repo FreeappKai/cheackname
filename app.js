@@ -304,4 +304,3 @@ if (typeof window !== 'undefined') {
     window.Session = Session;
     window.Utils = Utils;
 }
-
