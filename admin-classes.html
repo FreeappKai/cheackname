@@ -250,7 +250,8 @@
 
         function renderClasses() {
             const grid = document.getElementById('classesGrid');
-            const gradeClasses = allClasses.filter(c => c.Grade === currentGrade);
+            // Backend returns "ป.1" but currentGrade is 1. Match both formats.
+            const gradeClasses = allClasses.filter(c => c.Grade == currentGrade || c.Grade === `ป.${currentGrade}`);
 
             if (gradeClasses.length === 0) {
                 grid.innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">ไม่มีห้องเรียน</p>';
@@ -358,3 +359,4 @@
 </body>
 
 </html>
+
