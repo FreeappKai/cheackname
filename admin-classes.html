@@ -261,8 +261,8 @@
                 <div class="class-card" onclick='viewClass(${JSON.stringify(c)})'>
                     <div class="flex justify-between items-start mb-4">
                         <div>
-                            <div class="text-2xl font-bold text-blue-500 font-kanit">ห้อง ${c.Section}</div>
-                            <div class="text-sm text-gray-600">ป.${c.Grade}/${c.Section}</div>
+                            <div class="text-2xl font-bold text-blue-500 font-kanit">${c.ClassName || 'ห้อง ' + (c.Room || c.Section)}</div>
+                            <div class="text-sm text-gray-600">${c.Grade}/${c.Room || c.Section}</div>
                         </div>
                         <span class="px-3 py-1 rounded-full text-sm ${c.IsActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}">
                             ${c.IsActive ? '🟢 เปิด' : '🔒 ปิด'}
