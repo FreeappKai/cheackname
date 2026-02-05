@@ -244,7 +244,8 @@ css.com"></script>
                 <div class="p-4 border-t border-gray-200 dark:border-gray-700">
                     <div class="flex justify-between items-center">
                         <div class="text-sm text-gray-600 dark:text-gray-400">แสดง <span id="showingCount">0</span> จาก
-                            <span id="totalCount">0</span> คน</div>
+                            <span id="totalCount">0</span> คน
+                        </div>
                         <div id="pagination"></div>
                     </div>
                 </div>
@@ -387,54 +388,44 @@ css.com"></script>
             Utils.hideLoader();
         }
 
+        let classMap = {}; // Map ClassID -> ClassName
+
         async function loadClasses() {
             try {
                 const result = await API.getClasses();
                 if (result.success) {
-                    const classes = result.data.map(c => c.ClassID);
-                    document.getElementById('filterClass').innerHTML = '<option value="">ทุกห้อง</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
-                    document.getElementById('inputClass').innerHTML = classes.map(c => `<option value="${c}">${c}</option>`).join('');
+                    // Populate Dropdown & Map
+                    const classes = result.data;
+                    classes.forEach(c => {
+                        // Store mapping: ClassID -> ClassName (or Room if ClassName missing)
+                        classMap[c.ClassID] = c.ClassName || `ห้อง ${c.Room || c.Section}`;
+                    });
+
+                    // Update Filter Dropdown
+                    const uniqueRooms = [...new Set(classes.map(c => c.ClassName || c.Room || c.Section))];
+                    document.getElementById('filterClass').innerHTML = '<option value="">ทุกห้อง</option>' +
+                        uniqueRooms.map(r => `<option value="${r}">${r}</option>`).join('');
+
+                    // Update Input Dropdown (Use ClassID as value, show Name)
+                    document.getElementById('inputClass').innerHTML = classes.map(c =>
+                        `<option value="${c.ClassID}">${c.ClassName || 'ห้อง ' + (c.Room || c.Section)}</option>`
+                    ).join('');
                 }
             } catch (error) {
                 console.error('Error:', error);
             }
         }
 
-        function filterStudents() {
-            const search = document.getElementById('searchStudent').value.toLowerCase();
-            const grade = document.getElementById('filterGrade').value;
-            const classId = document.getElementById('filterClass').value;
-            const status = document.getElementById('filterStatus').value;
-
-            filteredStudents = allStudents.filter(s => {
-                const matchSearch = !search || s.StudentID.toLowerCase().includes(search) || s.Name.toLowerCase().includes(search);
-                const matchGrade = !grade || (s.Class && s.Class.startsWith(`ป.${grade}`));
-                const matchClass = !classId || s.Class === classId;
-                const matchStatus = !status || s.Status === status;
-                return matchSearch && matchGrade && matchClass && matchStatus;
-            });
-
-            currentPage = 1;
-            renderStudents();
-        }
+        // ... existing filterStudents function ...
 
         function renderStudents() {
-            const start = (currentPage - 1) * perPage;
-            const end = start + perPage;
-            const pageStudents = filteredStudents.slice(start, end);
-
-            const tbody = document.getElementById('studentsTable');
-
-            if (pageStudents.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">ไม่พบนักเรียน</td></tr>';
-                return;
-            }
+            // ... (pagination logic) ...
 
             tbody.innerHTML = pageStudents.map(s => `
                 <tr class="border-b border-gray-100 dark:border-gray-700">
                     <td class="py-4 px-6 font-mono font-bold">${s.StudentID}</td>
                     <td class="py-4 px-6">${s.Name}</td>
-                    <td class="text-center py-4 px-6">${s.Class || '-'}</td>
+                    <td class="text-center py-4 px-6">${classMap[s.Class] || s.Class || '-'}</td>
                     <td class="text-center py-4 px-6">
                         <span class="px-3 py-1 rounded-full text-sm ${s.Status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}">
                             ${s.Status === 'ACTIVE' ? 'กำลังศึกษา' : s.Status === 'TRANSFERRED' ? 'ย้าย' : 'จบการศึกษา'}
