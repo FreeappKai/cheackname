@@ -27,8 +27,7 @@ const API = {
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
+                    'Content-Type': 'text/plain',
                 },
                 body: JSON.stringify(payload)
             });
