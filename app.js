@@ -4,7 +4,7 @@
 // ==========================================
 
 // Configure API endpoint (change this to your deployed Web App URL)
-const API_URL = 'https://script.google.com/macros/s/AKfycbwxgUHcA6MbTyrjF9YNAjjM9C9d-xEyZDBbnYMHK8ZaxR-XuYrc-w1i4pPwRTrZF_jAnw/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwT-anZGk9E_1aa4iXxIyTQg9YkbKf68e1SGXz8FNzByZ2cxIYW5CLdzVsajozIlbfWcw/exec';
 
 // ==========================================
 // API CLIENT
@@ -449,5 +449,3 @@ if (typeof window !== 'undefined') {
     window.Session = Session;
     window.Utils = Utils;
 }
-
-
