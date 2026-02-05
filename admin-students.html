@@ -303,8 +303,51 @@ css.com"></script>
 
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">รูปภาพ</label>
-                    <input type="file" id="inputPhoto" accept="image/*"
-                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700">
+                    <div class="flex flex-col gap-3">
+                        <!-- File Input -->
+                        <input type="file" id="inputPhoto" accept="image/*" onchange="handleFileSelect(this)"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700">
+
+                        <!-- Camera Controls -->
+                        <div class="flex gap-2">
+                            <button type="button" onclick="startCamera()"
+                                class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-kanit text-sm flex items-center gap-2">
+                                📷 เปิดกล้อง
+                            </button>
+                            <button type="button" id="btnCapture" onclick="capturePhoto()"
+                                class="hidden px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-kanit text-sm flex items-center gap-2">
+                                📸 ถ่ายรูป
+                            </button>
+                            <button type="button" id="btnRetake" onclick="retakePhoto()"
+                                class="hidden px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-kanit text-sm flex items-center gap-2">
+                                🔄 ถ่ายใหม่
+                            </button>
+                            <button type="button" id="btnStop" onclick="stopCamera()"
+                                class="hidden px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-kanit text-sm flex items-center gap-2">
+                                ❌ ปิดกล้อง
+                            </button>
+                        </div>
+
+                        <!-- Camera Preview Area -->
+                        <div id="cameraContainer"
+                            class="hidden relative w-full max-w-sm mx-auto bg-black rounded-lg overflow-hidden aspect-[3/4]">
+                            <video id="cameraVideo" autoplay playsinline class="w-full h-full object-cover"></video>
+                            <canvas id="cameraCanvas" class="hidden"></canvas>
+                            <div id="countdown"
+                                class="hidden absolute inset-0 flex items-center justify-center text-white text-6xl font-bold bg-black/50">
+                                3</div>
+                        </div>
+
+                        <!-- Photo Preview -->
+                        <div id="photoPreviewContainer" class="hidden w-full max-w-[200px] mx-auto mt-2 relative group">
+                            <img id="photoPreview"
+                                class="w-full h-auto rounded-lg border border-gray-300 dark:border-gray-600">
+                            <button onclick="clearPhoto()"
+                                class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                ❌
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex gap-4">
@@ -472,9 +515,102 @@ css.com"></script>
             document.getElementById('totalCount').textContent = filteredStudents.length;
         }
 
+        // Camera Variables
+        let stream = null;
+        let photoBase64 = null;
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                const video = document.getElementById('cameraVideo');
+                video.srcObject = stream;
+
+                document.getElementById('cameraContainer').classList.remove('hidden');
+                document.getElementById('btnCapture').classList.remove('hidden');
+                document.getElementById('btnStop').classList.remove('hidden');
+
+                // Hide preview if exists
+                if (!photoBase64) {
+                    document.getElementById('photoPreviewContainer').classList.add('hidden');
+                }
+            } catch (err) {
+                console.error("Error starting camera:", err);
+                Utils.showNotification('ไม่สามารถเปิดกล้องได้: ' + err.message, 'error');
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            document.getElementById('cameraVideo').srcObject = null;
+            document.getElementById('cameraContainer').classList.add('hidden');
+            document.getElementById('btnCapture').classList.add('hidden');
+            document.getElementById('btnStop').classList.add('hidden');
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+
+            // Match canvas size to video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert to Base64
+            photoBase64 = canvas.toDataURL('image/jpeg', 0.8);
+
+            // Show Preview
+            showPreview(photoBase64);
+
+            // Toggle Buttons
+            stopCamera();
+            document.getElementById('btnRetake').classList.remove('hidden');
+        }
+
+        function retakePhoto() {
+            clearPhoto();
+            startCamera();
+            document.getElementById('btnRetake').classList.add('hidden');
+        }
+
+        function clearPhoto() {
+            photoBase64 = null;
+            document.getElementById('photoPreview').src = '';
+            document.getElementById('photoPreviewContainer').classList.add('hidden');
+            document.getElementById('inputPhoto').value = ''; // Clear file input
+        }
+
+        function showPreview(src) {
+            document.getElementById('photoPreview').src = src;
+            document.getElementById('photoPreviewContainer').classList.remove('hidden');
+        }
+
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    photoBase64 = e.target.result;
+                    showPreview(photoBase64);
+                    // If camera was running, stop it
+                    if (stream) stopCamera();
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // ==========================================
+        // MAIN FUNCTIONS
+        // ==========================================
+
         function showAddModal() {
             document.getElementById('inputStudentID').value = '';
             document.getElementById('inputName').value = '';
+            clearPhoto(); // Reset photo
             document.getElementById('studentModal').classList.add('show');
         }
 
@@ -485,6 +621,21 @@ css.com"></script>
         function editStudent(student) {
             document.getElementById('inputStudentID').value = student.StudentID;
             document.getElementById('inputName').value = student.Name;
+            document.getElementById('inputGrade').value = student.Grade && student.Grade.replace('ป.', '') || '1';
+            document.getElementById('inputClass').value = student.Class;
+            document.getElementById('inputStatus').value = student.Status;
+
+            // Handle Photo
+            if (student.ImageUrl) {
+                // If it's a Drive URL, it might not load directly without proper permissions or proxy
+                // But generally users want to see existing photo
+                // For now, we just set it. If it's empty, we clear.
+                photoBase64 = null; // Don't send it back unless changed
+                showPreview(student.ImageUrl);
+            } else {
+                clearPhoto();
+            }
+
             document.getElementById('studentModal').classList.add('show');
         }
 
@@ -503,7 +654,17 @@ css.com"></script>
             Utils.showLoader();
 
             try {
-                const result = await API.saveStudent({ studentID, name, class: classId, status });
+                // Construct Payload matching Code.gs expected schema
+                const payload = {
+                    StudentID: studentID,
+                    Name: name, // Fixed: use Name instead of name
+                    Class: classId,
+                    Grade: `ป.${grade}`, // Format Grade
+                    Status: status,
+                    Photo: photoBase64 // Send Base64 if exists
+                };
+
+                const result = await API.saveStudent(payload);
                 if (result.success) {
                     Utils.showNotification('บันทึกสำเร็จ', 'success');
                     closeModal('studentModal');
