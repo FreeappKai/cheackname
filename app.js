@@ -16,20 +16,21 @@ const API = {
             console.log('🔵 API Call:', action, data);
             console.log('🔵 API URL:', API_URL);
 
-            // Build URL with query parameters (GET request to bypass CORS)
-            const params = new URLSearchParams({
+            // Use POST request with body data to handle large payloads
+            const payload = {
                 action: action,
                 ...data
-            });
+            };
 
-            const url = `${API_URL}?${params.toString()}`;
-            console.log('🔵 Full URL:', url);
+            console.log('🔵 Payload:', payload);
 
-            const response = await fetch(url, {
-                method: 'GET',
+            const response = await fetch(API_URL, {
+                method: 'POST',
                 headers: {
+                    'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                }
+                },
+                body: JSON.stringify(payload)
             });
 
             console.log('🟢 Response status:', response.status);
