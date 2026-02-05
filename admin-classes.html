@@ -317,7 +317,13 @@
 
             Utils.showLoader();
             try {
-                const result = await API.saveClass({ grade, section, homeroom, capacity });
+                // Use capital keys to match backend expectations
+                const result = await API.saveClass({
+                    Grade: grade,
+                    Section: section,
+                    HomeroomTeacher: homeroom,
+                    Capacity: capacity
+                });
                 if (result.success) {
                     Utils.showNotification('บันทึกสำเร็จ', 'success');
                     closeModal();
