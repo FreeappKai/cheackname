@@ -16,15 +16,20 @@ const API = {
             console.log('🔵 API Call:', action, data);
             console.log('🔵 API URL:', API_URL);
 
-            const response = await fetch(API_URL, {
-                method: 'POST',
+            // Build URL with query parameters (GET request to bypass CORS)
+            const params = new URLSearchParams({
+                action: action,
+                ...data
+            });
+
+            const url = `${API_URL}?${params.toString()}`;
+            console.log('🔵 Full URL:', url);
+
+            const response = await fetch(url, {
+                method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: action,
-                    ...data
-                })
+                    'Accept': 'application/json',
+                }
             });
 
             console.log('🟢 Response status:', response.status);
