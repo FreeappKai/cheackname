@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Attendance System - Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'kanit': ['Kanit', 'sans-serif']
+                    },
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#22C55E',
+                        accent: '#F59E0B',
+                        error: '#EF4444'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 min-h-screen flex items-center justify-center font-sans">
+    
+    <!-- Login Container -->
+    <div class="w-full max-w-md px-4">
+        <!-- Logo & Title -->
+        <div class="text-center mb-8 animate-fade-in">
+            <img src="https://img5.pic.in.th/file/secure-sv1/-668e94e3b2fda05e3.png" 
+                 alt="School Logo" 
+                 class="h-24 mx-auto mb-4 drop-shadow-lg">
+            <h1 class="text-3xl font-bold font-kanit text-gray-800 dark:text-white mb-2">
+                ระบบเช็คชื่ออัจฉริยะ
+            </h1>
+            <p class="text-gray-600 dark:text-gray-300">Smart Attendance System</p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95">
+            <form id="loginForm" class="space-y-6">
+                <!-- Role Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2 font-kanit">
+                        เข้าสู่ระบบในฐานะ
+                    </label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" 
+                                class="role-btn px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium transition-all hover:border-primary hover:text-primary dark:hover:border-primary dark:hover:text-primary"
+                                data-role="ADMIN">
+                            <div class="text-2xl mb-1">👨‍💼</div>
+                            <div class="text-xs font-kanit">ผู้ดูแล</div>
+                        </button>
+                        <button type="button" 
+                                class="role-btn px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium transition-all hover:border-primary hover:text-primary dark:hover:border-primary dark:hover:text-primary"
+                                data-role="TEACHER">
+                            <div class="text-2xl mb-1">👨‍🏫</div>
+                            <div class="text-xs font-kanit">ครู</div>
+                        </button>
+                        <button type="button" 
+                                class="role-btn px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium transition-all hover:border-primary hover:text-primary dark:hover:border-primary dark:hover:text-primary"
+                                data-role="STUDENT">
+                            <div class="text-2xl mb-1">👨‍🎓</div>
+                            <div class="text-xs font-kanit">นักเรียน</div>
+                        </button>
+                    </div>
+                    <input type="hidden" id="role" name="role" required>
+                </div>
+
+                <!-- Username -->
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2 font-kanit">
+                        ชื่อผู้ใช้ / รหัส
+                    </label>
+                    <input type="text" 
+                           id="username" 
+                           name="username" 
+                           required
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                           placeholder="กรอกชื่อผู้ใช้หรือรหัสนักเรียน">
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2 font-kanit">
+                        รหัสผ่าน
+                    </label>
+                    <input type="password" 
+                           id="password" 
+                           name="password" 
+                           required
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                           placeholder="กรอกรหัสผ่าน">
+                </div>
+
+                <!-- Error Message -->
+                <div id="errorMessage" class="hidden bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg text-sm font-kanit">
+                </div>
+
+                <!-- Login Button -->
+                <button type="submit" 
+                        class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 font-kanit text-lg">
+                    เข้าสู่ระบบ
+                </button>
+            </form>
+
+            <!-- Dark Mode Toggle -->
+            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <button id="darkModeToggle" 
+                        class="w-full flex items-center justify-center gap-2 text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-kanit">
+                    <span class="text-xl" id="darkModeIcon">🌙</span>
+                    <span id="darkModeText">โหมดมืด</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-8 text-gray-600 dark:text-gray-400 text-sm">
+            <p class="font-kanit">FREEMAN STUDIO BY KRUKAI</p>
+            <p class="mt-1">© 2026 Smart Attendance System</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Role selection
+        document.querySelectorAll('.role-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.role-btn').forEach(b => {
+                    b.classList.remove('border-primary', 'bg-blue-50', 'dark:bg-blue-900/30', 'text-primary');
+                    b.classList.add('border-gray-300', 'dark:border-gray-600');
+                });
+                this.classList.add('border-primary', 'bg-blue-50', 'dark:bg-blue-900/30', 'text-primary');
+                this.classList.remove('border-gray-300', 'dark:border-gray-600');
+                document.getElementById('role').value = this.dataset.role;
+            });
+        });
+
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const role = document.getElementById('role').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!role) {
+                showError('กรุณาเลือกบทบาทที่ต้องการเข้าสู่ระบบ');
+                return;
+            }
+            
+            try {
+                const result = await API.authenticateUser({ username, password, role });
+                
+                if (result.success) {
+                    // Store session
+                    sessionStorage.setItem('user', JSON.stringify(result.data));
+                    
+                    // Redirect based on role
+                    switch (result.data.role) {
+                        case 'ADMIN':
+                            window.location.href = 'admin-dashboard.html';
+                            break;
+                        case 'TEACHER':
+                            window.location.href = 'teacher-dashboard.html';
+                            break;
+                        case 'STUDENT':
+                            window.location.href = 'student-dashboard.html';
+                            break;
+                    }
+                } else {
+                    showError('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+                }
+            } catch (error) {
+                showError('เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
+            }
+        });
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            setTimeout(() => {
+                errorDiv.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Dark mode toggle
+        document.getElementById('darkModeToggle').addEventListener('click', function() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('darkModeIcon').textContent = isDark ? '☀️' : '🌙';
+            document.getElementById('darkModeText').textContent = isDark ? 'โหมดสว่าง' : 'โหมดมืด';
+            localStorage.setItem('darkMode', isDark);
+        });
+
+        // Load dark mode preference
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.documentElement.classList.add('dark');
+            document.getElementById('darkModeIcon').textContent = '☀️';
+            document.getElementById('darkModeText').textContent = 'โหมดสว่าง';
+        }
+    </script>
+</body>
+</html>

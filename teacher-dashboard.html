@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - Smart Attendance</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen font-sans">
+
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="https://img5.pic.in.th/file/secure-sv1/-668e94e3b2fda05e3.png" alt="Logo" class="h-12">
+                <div>
+                    <h1 class="text-xl font-bold font-kanit text-gray-800 dark:text-white">ระบบครู</h1>
+                    <p class="text-sm text-gray-600 dark:text-gray-400" id="teacherName">ยินดีต้อนรับ</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button id="darkModeToggle"
+                    class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600">
+                    <span class="text-xl">🌙</span>
+                </button>
+                <button onclick="logout()"
+                    class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-kanit transition-colors">
+                    ออกจากระบบ
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+
+        <!-- Quick Actions -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold font-kanit text-gray-800 dark:text-white mb-4">เช็คชื่อด่วน</h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                <a href="face-recognition.html"
+                    class="card bg-gradient-to-br from-blue-500 to-indigo-600 text-white p-6 hover:shadow-2xl hover:scale-105 transition-all">
+                    <div class="flex items-center gap-4">
+                        <div class="text-5xl">📸</div>
+                        <div>
+                            <h3 class="text-xl font-bold font-kanit">เช็คชื่อด้วย Face Recognition</h3>
+                            <p class="text-blue-100">ใช้กล้องจดจำใบหน้าอัตโนมัติ</p>
+                        </div>
+                    </div>
+                </a>
+                <button onclick="openManualAttendance()"
+                    class="card bg-gradient-to-br from-amber-500 to-orange-600 text-white p-6 hover:shadow-2xl hover:scale-105 transition-all text-left">
+                    <div class="flex items-center gap-4">
+                        <div class="text-5xl">📝</div>
+                        <div>
+                            <h3 class="text-xl font-bold font-kanit">เช็คชื่อด้วยตนเอง</h3>
+                            <p class="text-orange-100">เลือกนักเรียนจากรายชื่อ</p>
+                        </div>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Today's Schedule -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold font-kanit text-gray-800 dark:text-white mb-4">ตารางสอนวันนี้</h2>
+            <div id="todaySchedule" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid md:grid-cols-4 gap-4 mb-8">
+            <div class="stat-card">
+                <div class="stat-number" id="totalPresent">0</div>
+                <div class="stat-label">มาเรียนวันนี้</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-number" id="totalLate">0</div>
+                <div class="stat-label">มาสายวันนี้</div>
+            </div>
+            <div class="stat-card danger">
+                <div class="stat-number" id="totalAbsent">0</div>
+                <div class="stat-label">ขาดเรียนวันนี้</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-number" id="attendanceRate">0%</div>
+                <div class="stat-label">อัตราการมาเรียน</div>
+            </div>
+        </div>
+
+        <!-- Class Management -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold font-kanit text-gray-800 dark:text-white mb-4">รายชื่อห้องเรียน</h2>
+            <div class="card">
+                <div class="mb-4 flex gap-2">
+                    <select id="classFilter"
+                        class="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option value="">ทุกห้อง</option>
+                    </select>
+                    <button onclick="refreshAttendance()"
+                        class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-kanit">
+                        🔄 รีเฟรช
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>รหัสนักเรียน</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>ห้อง</th>
+                                <th>สถานะวันนี้</th>
+                                <th>การดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody">
+                            <!-- Dynamic content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold font-kanit text-gray-800 dark:text-white mb-4">กิจกรรมล่าสุด</h2>
+            <div class="card">
+                <div id="recentActivity" class="space-y-3">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
+        <div class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-600 dark:text-gray-400">
+            <p class="font-kanit">FREEMAN STUDIO BY KRUKAI</p>
+            <p class="text-sm mt-1">© 2026 Smart Attendance System</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        let currentTeacher = null;
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Check authentication
+            if (!Session.requireAuth(['TEACHER'])) return;
+
+            currentTeacher = Session.get();
+            document.getElementById('teacherName').textContent = `ครู ${currentTeacher.username}`;
+
+            // Load dashboard data
+            await loadDashboardData();
+
+            // Setup dark mode
+            setupDarkMode();
+        });
+
+        async function loadDashboardData() {
+            Utils.showLoader();
+
+            try {
+                // Get teacher dashboard data
+                const result = await API.getTeacherDashboard(currentTeacher.linkedId || currentTeacher.userId);
+
+                if (result.success) {
+                    renderTodaySchedule(result.data.todaySchedule);
+                    renderTodayStats(result.data.todayAttendance);
+                    renderRecentActivity(result.data.todayAttendance);
+                }
+
+                // Load student list
+                await loadStudentList();
+
+            } catch (error) {
+                console.error('Dashboard load error:', error);
+                Utils.showNotification('เกิดข้อผิดพลาดในการโหลดข้อมูล', 'error');
+            }
+
+            Utils.hideLoader();
+        }
+
+        function renderTodaySchedule(schedule) {
+            const container = document.getElementById('todaySchedule');
+
+            if (!schedule || schedule.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">ไม่มีตารางสอนวันนี้</p>';
+                return;
+            }
+
+            container.innerHTML = schedule.map(entry => `
+                <div class="card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm font-semibold">
+                            คาบที่ ${entry.Period}
+                        </span>
+                        <span class="text-sm text-gray-600 dark:text-gray-400">${entry.StartTime || ''} - ${entry.EndTime || ''}</span>
+                    </div>
+                    <h3 class="text-lg font-bold font-kanit text-gray-800 dark:text-white mb-1">${entry.SubjectID}</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">${entry.ClassID}</p>
+                    <button onclick="quickCheckAttendance('${entry.ClassID}', '${entry.SubjectID}', '${entry.Period}')" 
+                            class="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-kanit text-sm transition-colors">
+                        เช็คชื่อเลย
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function renderTodayStats(attendance) {
+            const present = attendance.filter(a => a.Status === 'PRESENT').length;
+            const late = attendance.filter(a => a.Status === 'LATE').length;
+            const absent = attendance.filter(a => a.Status === 'ABSENT').length;
+            const total = present + late + absent;
+            const rate = total > 0 ? ((present + late) / total * 100).toFixed(0) : 0;
+
+            document.getElementById('totalPresent').textContent = present;
+            document.getElementById('totalLate').textContent = late;
+            document.getElementById('totalAbsent').textContent = absent;
+            document.getElementById('attendanceRate').textContent = rate + '%';
+        }
+
+        function renderRecentActivity(attendance) {
+            const container = document.getElementById('recentActivity');
+            const recent = attendance.slice(-10).reverse();
+
+            if (recent.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">ยังไม่มีกิจกรรมวันนี้</p>';
+                return;
+            }
+
+            container.innerHTML = recent.map(record => `
+                <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
+                        ${record.Name.charAt(0)}
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold text-gray-800 dark:text-white">${record.Name}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">${record.StudentID} - ${record.Class}</p>
+                    </div>
+                    <div class="text-right">
+                        ${Utils.getStatusBadge(record.Status)}
+                        <p class="text-xs text-gray-500 mt-1">${Utils.formatTime(record.Timestamp)}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadStudentList() {
+            const result = await API.getStudents();
+
+            if (result.success) {
+                renderStudentTable(result.data);
+                populateClassFilter(result.data);
+            }
+        }
+
+        function renderStudentTable(students) {
+            const tbody = document.getElementById('studentTableBody');
+            const today = new Date().toISOString().split('T')[0];
+
+            if (students.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">ไม่พบนักเรียน</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = students.map(student => `
+                <tr>
+                    <td class="font-mono">${student.StudentID}</td>
+                    <td class="font-semibold">${student.Name}</td>
+                    <td>${student.Class}</td>
+                    <td><span class="badge badge-warning">ยังไม่เช็ค</span></td>
+                    <td>
+                        <button onclick="viewStudentDetails('${student.StudentID}')" 
+                                class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm">
+                            ดูรายละเอียด
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function populateClassFilter(students) {
+            const select = document.getElementById('classFilter');
+            const classes = [...new Set(students.map(s => s.Class))].sort();
+
+            select.innerHTML = '<option value="">ทุกห้อง</option>' +
+                classes.map(c => `<option value="${c}">${c}</option>`).join('');
+
+            select.addEventListener('change', filterStudents);
+        }
+
+        async function filterStudents() {
+            const classValue = document.getElementById('classFilter').value;
+            const result = await API.getStudents(classValue ? { class: classValue } : {});
+
+            if (result.success) {
+                renderStudentTable(result.data);
+            }
+        }
+
+        function quickCheckAttendance(classId, subject, period) {
+            window.location.href = `face-recognition.html?class=${classId}&subject=${subject}&period=${period}`;
+        }
+
+        function openManualAttendance() {
+            window.location.href = 'face-recognition.html';
+        }
+
+        function viewStudentDetails(studentId) {
+            alert('Student details: ' + studentId + '\n(Feature coming soon)');
+        }
+
+        async function refreshAttendance() {
+            await loadDashboardData();
+            Utils.showNotification('รีเฟรชข้อมูลสำเร็จ', 'success');
+        }
+
+        function logout() {
+            Session.clear();
+            window.location.href = 'index.html';
+        }
+
+        function setupDarkMode() {
+            const toggle = document.getElementById('darkModeToggle');
+
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+                toggle.querySelector('span').textContent = '☀️';
+            }
+
+            toggle.addEventListener('click', function () {
+                document.documentElement.classList.toggle('dark');
+                const isDark = document.documentElement.classList.contains('dark');
+                toggle.querySelector('span').textContent = isDark ? '☀️' : '🌙';
+                localStorage.setItem('darkMode', isDark);
+            });
+        }
+    </script>
+</body>
+
+</html>

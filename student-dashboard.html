@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Smart Attendance</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen font-sans">
+
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-md">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="https://img5.pic.in.th/file/secure-sv1/-668e94e3b2fda05e3.png" alt="Logo" class="h-12">
+                <div>
+                    <h1 class="text-xl font-bold font-kanit text-gray-800 dark:text-white">ระบบนักเรียน</h1>
+                    <p class="text-sm text-gray-600 dark:text-gray-400" id="studentName">ยินดีต้อนรับ</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button id="darkModeToggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700">
+                    <span class="text-xl">🌙</span>
+                </button>
+                <button onclick="logout()"
+                    class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-kanit">
+                    ออกจากระบบ
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 py-8">
+
+        <!-- Student Profile Card -->
+        <div class="card mb-8 bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+            <div class="flex items-center gap-6">
+                <div class="w-24 h-24 rounded-full bg-white bg-opacity-20 backdrop-blur-sm flex items-center justify-center text-5xl font-bold"
+                    id="studentAvatar">
+                    👨‍🎓
+                </div>
+                <div class="flex-1">
+                    <h2 class="text-3xl font-bold font-kanit mb-1" id="studentFullName">กำลังโหลด...</h2>
+                    <p class="text-blue-100 mb-2" id="studentId">-</p>
+                    <div class="inline-block px-4 py-1 bg-white bg-opacity-20 backdrop-blur-sm rounded-full">
+                        <span id="studentClass">-</span>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-5xl font-bold" id="attendanceScore">0%</div>
+                    <div class="text-blue-100">อัตราการมาเรียน</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid md:grid-cols-4 gap-4 mb-8">
+            <div class="card bg-white dark:bg-gray-800">
+                <div class="text-3xl font-bold text-green-500" id="totalPresent">0</div>
+                <div class="text-gray-600 dark:text-gray-400 mt-1">มาเรียน</div>
+            </div>
+            <div class="card bg-white dark:bg-gray-800">
+                <div class="text-3xl font-bold text-yellow-500" id="totalLate">0</div>
+                <div class="text-gray-600 dark:text-gray-400 mt-1">มาสาย</div>
+            </div>
+            <div class="card bg-white dark:bg-gray-800">
+                <div class="text-3xl font-bold text-red-500" id="totalAbsent">0</div>
+                <div class="text-gray-600 dark:text-gray-400 mt-1">ขาดเรียน</div>
+            </div>
+            <div class="card bg-white dark:bg-gray-800">
+                <div class="text-3xl font-bold text-blue-500" id="totalLeave">0</div>
+                <div class="text-gray-600 dark:text-gray-400 mt-1">ลา</div>
+            </div>
+        </div>
+
+        <!-- Attendance Chart -->
+        <div class="card mb-8 bg-white dark:bg-gray-800">
+            <h2 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-4">สถิติการมาเรียน</h2>
+            <canvas id="attendanceChart" class="max-h-64"></canvas>
+        </div>
+
+        <!-- Recent Attendance -->
+        <div class="card mb-8 bg-white dark:bg-gray-800">
+            <h2 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-4">ประวัติการเช็คชื่อล่าสุด</h2>
+            <div id="recentAttendance" class="space-y-2">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+
+        <!-- Subject Enrollment -->
+        <div class="card bg-white dark:bg-gray-800">
+            <h2 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-4">วิชาที่เรียน</h2>
+            <div id="subjectList" class="grid md:grid-cols-2 gap-3">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
+        <div class="max-w-5xl mx-auto px-4 py-6 text-center text-gray-600 dark:text-gray-400">
+            <p class="font-kanit">FREEMAN STUDIO BY KRUKAI</p>
+            <p class="text-sm mt-1">© 2026 Smart Attendance System</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        let currentStudent = null;
+        let attendanceChart = null;
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Check authentication
+            if (!Session.requireAuth(['STUDENT'])) return;
+
+            currentStudent = Session.get();
+
+            // Load dashboard
+            await loadDashboard();
+
+            // Setup dark mode
+            setupDarkMode();
+        });
+
+        async function loadDashboard() {
+            Utils.showLoader();
+
+            try {
+                const result = await API.getStudentDashboard(currentStudent.linkedId || currentStudent.userId);
+
+                if (result.success) {
+                    const { student, stats, recentAttendance } = result.data;
+
+                    // Render student profile
+                    renderStudentProfile(student, stats);
+
+                    // Render stats
+                    renderStats(stats);
+
+                    // Render chart
+                    renderChart(stats);
+
+                    // Render recent attendance
+                    renderRecentAttendance(recentAttendance);
+                }
+            } catch (error) {
+                console.error('Dashboard error:', error);
+                Utils.showNotification('เกิดข้อผิดพลาดในการโหลดข้อมูล', 'error');
+            }
+
+            Utils.hideLoader();
+        }
+
+        function renderStudentProfile(student, stats) {
+            document.getElementById('studentName').textContent = `สวัสดี, ${student.Name}`;
+            document.getElementById('studentFullName').textContent = student.Name;
+            document.getElementById('studentId').textContent = `รหัส: ${student.StudentID}`;
+            document.getElementById('studentClass').textContent = student.Class;
+            document.getElementById('studentAvatar').textContent = student.Name.charAt(0);
+            document.getElementById('attendanceScore').textContent = stats.attendanceRate + '%';
+
+            // Risk badge
+            if (stats.attendanceRate < 80) {
+                document.getElementById('attendanceScore').classList.add('text-red-300');
+            } else if (stats.attendanceRate < 90) {
+                document.getElementById('attendanceScore').classList.add('text-yellow-300');
+            }
+        }
+
+        function renderStats(stats) {
+            document.getElementById('totalPresent').textContent = stats.present;
+            document.getElementById('totalLate').textContent = stats.late;
+            document.getElementById('totalAbsent').textContent = stats.absent;
+            document.getElementById('totalLeave').textContent = stats.leave;
+        }
+
+        function renderChart(stats) {
+            const ctx = document.getElementById('attendanceChart').getContext('2d');
+
+            if (attendanceChart) {
+                attendanceChart.destroy();
+            }
+
+            attendanceChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['มาเรียน', 'มาสาย', 'ขาดเรียน', 'ลา'],
+                    datasets: [{
+                        data: [stats.present, stats.late, stats.absent, stats.leave],
+                        backgroundColor: [
+                            '#22C55E',
+                            '#F59E0B',
+                            '#EF4444',
+                            '#3B82F6'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    family: 'Kanit',
+                                    size: 14
+                                },
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderRecentAttendance(attendance) {
+            const container = document.getElementById('recentAttendance');
+
+            if (!attendance || attendance.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">ยังไม่มีประวัติการเช็คชื่อ</p>';
+                return;
+            }
+
+            container.innerHTML = attendance.map(record => `
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div>
+                        <p class="font-semibold text-gray-800 dark:text-white">${record.Subject}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">${Utils.formatDate(record.Date)} - คาบที่ ${record.Period}</p>
+                    </div>
+                    <div class="text-right">
+                        ${Utils.getStatusBadge(record.Status)}
+                        <p class="text-xs text-gray-500 mt-1">${record.Method === 'AUTO_FACE' ? '🤖 Face Recognition' : '📝 Manual'}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function logout() {
+            Session.clear();
+            window.location.href = 'index.html';
+        }
+
+        function setupDarkMode() {
+            const toggle = document.getElementById('darkModeToggle');
+
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+                toggle.querySelector('span').textContent = '☀️';
+            }
+
+            toggle.addEventListener('click', function () {
+                document.documentElement.classList.toggle('dark');
+                const isDark = document.documentElement.classList.contains('dark');
+                toggle.querySelector('span').textContent = isDark ? '☀️' : '🌙';
+                localStorage.setItem('darkMode', isDark);
+            });
+        }
+    </script>
+</body>
+
+</html>

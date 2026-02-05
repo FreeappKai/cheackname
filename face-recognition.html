@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition - Smart Attendance</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="bg-gray-900 min-h-screen font-sans">
+
+    <!-- Header -->
+    <div class="bg-gray-800 border-b border-gray-700 p-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="https://img5.pic.in.th/file/secure-sv1/-668e94e3b2fda05e3.png" alt="Logo" class="h-12">
+                <div>
+                    <h1 class="text-white font-kanit text-xl font-bold">เช็คชื่อด้วย Face Recognition</h1>
+                    <p class="text-gray-400 text-sm" id="classInfo">กำลังโหลด...</p>
+                </div>
+            </div>
+            <button onclick="window.history.back()"
+                class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-kanit transition-colors">
+                ← กลับ
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto p-4">
+        <div class="grid lg:grid-cols-3 gap-6">
+
+            <!-- Camera Section -->
+            <div class="lg:col-span-2">
+                <div class="camera-container bg-black rounded-2xl overflow-hidden shadow-2xl">
+                    <video id="videoElement" autoplay muted playsinline class="camera-video"></video>
+                    <canvas id="overlay" class="camera-overlay"></canvas>
+
+                    <!-- Controls Overlay -->
+                    <div class="absolute top-4 right-4 flex flex-col gap-2 z-10">
+                        <button id="soundToggle"
+                            class="p-3 bg-gray-800 bg-opacity-75 backdrop-blur-sm rounded-full text-white hover:bg-opacity-100 transition-all">
+                            🔊
+                        </button>
+                        <button id="cameraSwitch"
+                            class="p-3 bg-gray-800 bg-opacity-75 backdrop-blur-sm rounded-full text-white hover:bg-opacity-100 transition-all">
+                            🔄
+                        </button>
+                    </div>
+
+                    <!-- Status Indicator -->
+                    <div id="statusIndicator"
+                        class="absolute top-4 left-4 px-4 py-2 bg-blue-500 bg-opacity-90 backdrop-blur-sm rounded-full text-white font-kanit text-sm z-10">
+                        🔍 กำลังค้นหาใบหน้า...
+                    </div>
+                </div>
+
+                <!-- Manual Attendance Button -->
+                <div class="mt-4">
+                    <button id="manualAttendanceBtn"
+                        class="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-kanit text-lg font-semibold rounded-xl shadow-lg transition-all transform hover:scale-105">
+                        📝 เช็คชื่อด้วยตนเอง (Manual)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+
+                <!-- Today's Stats -->
+                <div class="card bg-gray-800 border border-gray-700">
+                    <h3 class="text-white font-kanit font-semibold text-lg mb-4">สถิติวันนี้</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">มา</span>
+                            <span class="text-green-400 text-xl font-bold" id="presentCount">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">มาสาย</span>
+                            <span class="text-yellow-400 text-xl font-bold" id="lateCount">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">ขาด</span>
+                            <span class="text-red-400 text-xl font-bold" id="absentCount">0</span>
+                        </div>
+                        <div class="border-t border-gray-700 pt-3 mt-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-400">ทั้งหมด</span>
+                                <span class="text-blue-400 text-xl font-bold" id="totalStudents">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Check-ins -->
+                <div class="card bg-gray-800 border border-gray-700">
+                    <h3 class="text-white font-kanit font-semibold text-lg mb-4">เช็คชื่อล่าสุด</h3>
+                    <div id="recentCheckIns" class="space-y-2 max-h-96 overflow-y-auto">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full mx-4 text-center animate-fade-in">
+            <div class="checkmark-animation">✓</div>
+            <h2 class="text-2xl font-bold font-kanit text-gray-800 dark:text-white mb-2" id="modalStudentName"></h2>
+            <p class="text-gray-600 dark:text-gray-400 mb-1" id="modalStudentId"></p>
+            <p class="text-gray-600 dark:text-gray-400 mb-4" id="modalClass"></p>
+            <div class="inline-block px-6 py-2 bg-green-100 text-green-700 rounded-full font-semibold">
+                เช็คชื่อสำเร็จ!
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Attendance Modal -->
+    <div id="manualModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-bold font-kanit text-gray-800 dark:text-white mb-4">เช็คชื่อด้วยตนเอง</h2>
+
+            <!-- Search -->
+            <input type="text" id="studentSearch" placeholder="ค้นหานักเรียน (ชื่อหรือรหัส)..."
+                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-4">
+
+            <!-- Student List -->
+            <div id="studentList" class="space-y-2 mb-4">
+                <!-- Dynamic content -->
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="closeManualModal()"
+                    class="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg font-kanit hover:bg-gray-300 dark:hover:bg-gray-600">
+                    ยกเลิก
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="face-api-handler.js"></script>
+    <script>
+        let currentUser = null;
+        let currentClass = null;
+        let currentPeriod = null;
+        let currentSubject = null;
+        let soundEnabled = true;
+        let todayAttendance = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Check authentication
+            currentUser = Session.get();
+            if (!currentUser || currentUser.role !== 'TEACHER') {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Get class/subject info from URL params or session
+            const params = new URLSearchParams(window.location.search);
+            currentClass = params.get('class') || 'ป.1/1';
+            currentSubject = params.get('subject') || 'คณิตศาสตร์';
+            currentPeriod = params.get('period') || '1';
+
+            document.getElementById('classInfo').textContent = `${currentClass} - ${currentSubject} - คาบที่ ${currentPeriod}`;
+
+            // Load students and attendance
+            await loadStudentsAndAttendance();
+
+            // Initialize Face Recognition
+            await initFaceRecognition();
+        });
+
+        async function loadStudentsAndAttendance() {
+            Utils.showLoader();
+
+            // Load students for this class
+            const studentsResult = await API.getStudents({ class: currentClass });
+
+            // Load today's attendance
+            const today = new Date().toISOString().split('T')[0];
+            const attendanceResult = await API.getAttendance({
+                class: currentClass,
+                subject: currentSubject,
+                date: today
+            });
+
+            if (attendanceResult.success) {
+                todayAttendance = attendanceResult.data;
+                updateStats();
+                updateRecentCheckIns();
+            }
+
+            Utils.hideLoader();
+        }
+
+        function updateStats() {
+            const present = todayAttendance.filter(a => a.Status === 'PRESENT').length;
+            const late = todayAttendance.filter(a => a.Status === 'LATE').length;
+            const absent = todayAttendance.filter(a => a.Status === 'ABSENT').length;
+
+            document.getElementById('presentCount').textContent = present;
+            document.getElementById('lateCount').textContent = late;
+            document.getElementById('absentCount').textContent = absent;
+        }
+
+        function updateRecentCheckIns() {
+            const container = document.getElementById('recentCheckIns');
+            const recent = todayAttendance.slice(-10).reverse();
+
+            if (recent.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">ยังไม่มีการเช็คชื่อ</p>';
+                return;
+            }
+
+            container.innerHTML = recent.map(record => `
+                <div class="flex items-center gap-3 p-3 bg-gray-700 rounded-lg">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                        ${record.Name.charAt(0)}
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-white font-medium text-sm">${record.Name}</p>
+                        <p class="text-gray-400 text-xs">${record.StudentID}</p>
+                    </div>
+                    <div>
+                        ${Utils.getStatusBadge(record.Status)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showSuccessModal(student) {
+            document.getElementById('modalStudentName').textContent = student.name;
+            document.getElementById('modalStudentId').textContent = student.studentId;
+            document.getElementById('modalClass').textContent = student.class;
+            document.getElementById('successModal').classList.remove('hidden');
+
+            if (soundEnabled) {
+                // Play success sound (optional)
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVqrl6qddGA==');
+                audio.play().catch(e => console.log('Sound play failed'));
+            }
+
+            setTimeout(() => {
+                document.getElementById('successModal').classList.add('hidden');
+            }, 3000);
+        }
+
+        // Sound toggle
+        document.getElementById('soundToggle').addEventListener('click', function () {
+            soundEnabled = !soundEnabled;
+            this.textContent = soundEnabled ? '🔊' : '🔇';
+        });
+
+        // Manual attendance
+        document.getElementById('manualAttendanceBtn').addEventListener('click', async function () {
+            const result = await API.getStudents({ class: currentClass });
+            if (result.success) {
+                showManualModal(result.data);
+            }
+        });
+
+        function showManualModal(students) {
+            const list = document.getElementById('studentList');
+            list.innerHTML = students.map(student => `
+                <div class="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer"
+                     onclick="recordManualAttendance('${student.StudentID}', '${student.Name}', '${student.Class}')">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
+                        ${student.Name.charAt(0)}
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold text-gray-800 dark:text-white">${student.Name}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">${student.StudentID} - ${student.Class}</p>
+                    </div>
+                    ${todayAttendance.find(a => a.StudentID === student.StudentID) ?
+                    '<span class="text-green-500">✓</span>' :
+                    '<span class="text-gray-400">○</span>'}
+                </div>
+            `).join('');
+
+            document.getElementById('manualModal').classList.remove('hidden');
+
+            // Search functionality
+            document.getElementById('studentSearch').addEventListener('input', function (e) {
+                const search = e.target.value.toLowerCase();
+                const filtered = students.filter(s =>
+                    s.Name.toLowerCase().includes(search) ||
+                    s.StudentID.toLowerCase().includes(search)
+                );
+                list.innerHTML = filtered.map(student => `
+                    <div class="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer"
+                         onclick="recordManualAttendance('${student.StudentID}', '${student.Name}', '${student.Class}')">
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
+                            ${student.Name.charAt(0)}
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-semibold text-gray-800 dark:text-white">${student.Name}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">${student.StudentID} - ${student.Class}</p>
+                        </div>
+                    </div>
+                `).join('');
+            });
+        }
+
+        function closeManualModal() {
+            document.getElementById('manualModal').classList.add('hidden');
+        }
+
+        async function recordManualAttendance(studentId, name, studentClass) {
+            // Check duplicate
+            const duplicate = await API.checkDuplicateAttendance({
+                studentId: studentId,
+                date: new Date().toISOString().split('T')[0],
+                period: currentPeriod,
+                subject: currentSubject
+            });
+
+            if (duplicate.isDuplicate) {
+                Utils.showNotification('นักเรียนคนนี้เช็คชื่อแล้ว', 'warning');
+                return;
+            }
+
+            const result = await API.recordAttendance({
+                studentId: studentId,
+                name: name,
+                class: studentClass,
+                subject: currentSubject,
+                period: currentPeriod,
+                date: new Date().toISOString().split('T')[0],
+                status: 'PRESENT',
+                method: 'MANUAL_TEACHER',
+                recordedBy: currentUser.userId
+            });
+
+            if (result.success) {
+                Utils.showNotification('เช็คชื่อสำเร็จ', 'success');
+                closeManualModal();
+                await loadStudentsAndAttendance();
+                showSuccessModal({ studentId, name, class: studentClass });
+            } else {
+                Utils.showNotification('เกิดข้อผิดพลาด: ' + result.error, 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>
