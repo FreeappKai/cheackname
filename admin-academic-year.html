@@ -381,7 +381,7 @@
             Utils.showLoader();
 
             try {
-                const result = await API.createAcademicYear({
+                const result = await API.saveAcademicYear({
                     year, sem1Start, sem1End, sem2Start, sem2End
                 });
 
@@ -454,5 +454,6 @@
         function logout() { Session.clear(); window.location.href = 'index.html'; }
     </script>
 </body>
+
 
 </html>
