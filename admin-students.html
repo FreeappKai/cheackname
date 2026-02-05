@@ -657,9 +657,10 @@ css.com"></script>
                 // Construct Payload matching Code.gs expected schema
                 const payload = {
                     StudentID: studentID,
-                    Name: name, // Fixed: use Name instead of name
+                    StudentCode: studentID, // Use StudentID as StudentCode if no separate field
+                    Name: name,
                     Class: classId,
-                    Grade: `ป.${grade}`, // Format Grade
+                    Grade: `ป.${grade}`,
                     Status: status,
                     Photo: photoBase64 // Send Base64 if exists
                 };
