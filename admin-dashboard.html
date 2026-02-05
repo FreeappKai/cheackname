@@ -177,7 +177,14 @@
             <div class="grid md:grid-cols-3 gap-4" id="classesGrid">
                 <!-- Dynamic content -->
             </div>
-        </div>
+        </div>\r\n\r\n <!-- Subjects Tab -->\r\n <div id="subjectsTab" class="tab-content hidden">\r\n <div
+                class="mb-6">\r\n <button onclick="showAddSubjectModal()" \r\n
+                    class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-kanit">\r\n +
+                    เพิ่มรายวิชา\r\n </button>\r\n </div>\r\n\r\n <div class="card bg-white dark:bg-gray-800">\r\n <div
+                    class="table-container">\r\n <table>\r\n <thead>\r\n <tr>\r\n <th>รหัสวิชา</th>\r\n <th>ชื่อวิชา
+                                </th>\r\n <th>ระดับชั้น</th>\r\n <th>สถานะ</th>\r\n </tr>\r\n </thead>\r\n <tbody
+                            id="subjectsTableBody">\r\n <!-- Dynamic content -->\r\n </tbody>\r\n </table>\r\n </div>
+                \r\n </div>\r\n </div>
 
         <!-- Reports Tab -->
         <div id="reportsTab" class="tab-content hidden">
@@ -254,6 +261,7 @@
                 await loadStudents();
                 await loadTeachers();
                 await loadClasses();
+                await loadSubjects();
 
             } catch (error) {
                 console.error('Dashboard error:', error);
@@ -382,6 +390,32 @@
             `).join('');
         }
 
+        async function loadSubjects() {
+            const result = await API.getSubjects();
+
+            if (result.success) {
+                renderSubjectsTable(result.data);
+            }
+        }
+
+        function renderSubjectsTable(subjects) {
+            const tbody = document.getElementById('subjectsTableBody');
+
+            if (subjects.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8">ไม่พบรายวิชา</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = subjects.map(subject => `
+                <tr>
+                    <td class="font-mono">${subject.SubjectCode || '-'}</td>
+                    <td class="font-semibold">${subject.SubjectName}</td>
+                    <td>${subject.Grade || '-'}</td>
+                    <td><span class="badge badge-success">${subject.Status || 'ACTIVE'}</span></td>
+                </tr>
+            `).join('');
+        }
+
         function showTab(tabName) {
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
@@ -397,11 +431,11 @@
         }
 
         function showAddStudentModal() {
-            alert('Add Student Modal (Feature coming soon)');
+            Utils.showNotification('เพื่อเพิ่มนักเรียน กรุณาเพิ่มข้อมูลใน Google Sheets (Students sheet) หรือใช้ InitializeDatabase.gs', 'info');
         }
 
         function importStudents() {
-            alert('Import CSV (Feature coming soon)');
+            Utils.showNotification('การนำเข้าจาก CSV: กรุณาเพิ่มข้อมูลลงใน Google Sheets โดยตรง', 'info');
         }
 
         function editStudent(studentId) {
@@ -421,7 +455,7 @@
         }
 
         function showAddTeacherModal() {
-            alert('Add Teacher Modal (Feature coming soon)');
+            Utils.showNotification('เพื่อเพิ่มครู กรุณาเพิ่มข้อมูลใน Google Sheets (Teachers sheet)', 'info');
         }
 
         function editTeacher(teacherId) {
@@ -429,11 +463,36 @@
         }
 
         function showAddClassModal() {
-            alert('Add Class Modal (Feature coming soon)');
+            Utils.showNotification('เพื่อเพิ่มห้องเรียน กรุณาเพิ่มข้อมูลใน Google Sheets (Classes sheet)', 'info');
         }
 
-        function generateReport(type) {
-            alert('Generate Report: ' + type + ' (Feature coming soon)');
+        async function generateReport(type) {
+            Utils.showLoader();
+
+            try {
+                let message = '';
+                switch (type) {
+                    case 'attendance':
+                        const attendance = await API.getAttendance();
+                        message = `พบข้อมูลการเข้าเรียน ${attendance.data ? attendance.data.length : 0} รายการ`;
+                        break;
+                    case 'students':
+                        const students = await API.getStudents();
+                        message = `พบนักเรียนทั้งหมด ${students.data ? students.data.length : 0} คน`;
+                        break;
+                    case 'performance':
+                        message = 'รายงานประสิทธิภาพ: ดูข้อมูลใน Google Sheets';
+                        break;
+                    case 'export':
+                        message = 'ส่งออกข้อมูล: เปิด Google Sheets > File > Download > CSV';
+                        break;
+                }
+                Utils.showNotification(message, 'success');
+            } catch (error) {
+                Utils.showNotification('เกิดข้อผิดพลาด', 'error');
+            }
+
+            Utils.hideLoader();
         }
 
         function logout() {
