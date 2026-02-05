@@ -16,18 +16,15 @@ const API = {
             console.log('🔵 API Call:', action, data);
             console.log('🔵 API URL:', API_URL);
 
-            // Build URL with query parameters (using GET to avoid CORS preflight)
-            const params = new URLSearchParams({
-                action: action,
-                ...data
-            });
-
-            const url = `${API_URL}?${params.toString()}`;
-            console.log('🔵 Full URL:', url);
-
-            const response = await fetch(url, {
-                method: 'GET',
-                redirect: 'follow'
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: action,
+                    ...data
+                })
             });
 
             console.log('🟢 Response status:', response.status);
@@ -145,6 +142,146 @@ const API = {
 
     async getAdminDashboard() {
         return await this.call('getAdminDashboard');
+    },
+
+    // Academic Years
+    async getAcademicYears() {
+        return await this.call('getAcademicYears');
+    },
+
+    async saveAcademicYear(data) {
+        return await this.call('saveAcademicYear', data);
+    },
+
+    async toggleSemester(yearId, semester, isActive) {
+        return await this.call('toggleSemester', { yearId, semester, isActive });
+    },
+
+    async lockYear(yearId, isLocked) {
+        return await this.call('lockYear', { yearId, isLocked });
+    },
+
+    async activateYear(yearId) {
+        return await this.call('activateYear', { yearId });
+    },
+
+    // Students (Extended)
+    async saveStudent(data) {
+        return await this.call('saveStudent', data);
+    },
+
+    async importStudents(data) {
+        return await this.call('importStudents', data);
+    },
+
+    async uploadStudentPhoto(studentId, photoBase64) {
+        return await this.call('uploadStudentPhoto', { studentId, photoBase64 });
+    },
+
+    // Teachers (Extended)
+    async saveTeacher(data) {
+        return await this.call('saveTeacher', data);
+    },
+
+    async resetPassword(userId) {
+        return await this.call('resetPassword', { userId });
+    },
+
+    async toggleTeacher(teacherId, isActive) {
+        return await this.call('toggleTeacher', { teacherId, isActive });
+    },
+
+    // Users & Roles
+    async getUsers() {
+        return await this.call('getUsers');
+    },
+
+    async saveUser(data) {
+        return await this.call('saveUser', data);
+    },
+
+    async toggleUser(username, isActive) {
+        return await this.call('toggleUser', { username, isActive });
+    },
+
+    // Classes (Extended)
+    async saveClass(data) {
+        return await this.call('saveClass', data);
+    },
+
+    async toggleClass(classId, isActive) {
+        return await this.call('toggleClass', { classId, isActive });
+    },
+
+    // Subjects (Extended)
+    async saveSubject(data) {
+        return await this.call('saveSubject', data);
+    },
+
+    async toggleSubject(subjectId, status) {
+        return await this.call('toggleSubject', { subjectId, status });
+    },
+
+    // Timetable (Extended)
+    async saveTimetable(data) {
+        return await this.call('saveTimetable', data);
+    },
+
+    async deleteTimetable(entity, day, period) {
+        return await this.call('deleteTimetable', { entity, day, period });
+    },
+
+    // Warnings & Early Warning System
+    async getWarnings() {
+        return await this.call('getWarnings');
+    },
+
+    async saveWarningThresholds(data) {
+        return await this.call('saveWarningThresholds', data);
+    },
+
+    async sendParentNotification(studentId) {
+        return await this.call('sendParentNotification', { studentId });
+    },
+
+    // Reports
+    async generateReport(data) {
+        return await this.call('generateReport', data);
+    },
+
+    // Logs & Audit Trail
+    async getLogs(filters = {}) {
+        return await this.call('getLogs', filters);
+    },
+
+    // Settings
+    async getSettings() {
+        return await this.call('getSettings');
+    },
+
+    async saveSettings(data) {
+        return await this.call('saveSettings', data);
+    },
+
+    async resetSystem() {
+        return await this.call('resetSystem');
+    },
+
+    // Backup & Restore
+    async createBackup(data) {
+        return await this.call('createBackup', data);
+    },
+
+    async restoreBackup(backupData) {
+        return await this.call('restoreBackup', { backupData });
+    },
+
+    async getBackupHistory() {
+        return await this.call('getBackupHistory');
+    },
+
+    async getBackupFile(backupId) {
+        return await this.call('getBackupFile', { backupId });
     }
 };
 
@@ -307,4 +444,3 @@ if (typeof window !== 'undefined') {
     window.Session = Session;
     window.Utils = Utils;
 }
-
