@@ -416,10 +416,35 @@ css.com"></script>
             }
         }
 
-        // ... existing filterStudents function ...
+        function filterStudents() {
+            const search = document.getElementById('searchStudent').value.toLowerCase();
+            const grade = document.getElementById('filterGrade').value;
+            const classId = document.getElementById('filterClass').value;
+            const status = document.getElementById('filterStatus').value;
+
+            filteredStudents = allStudents.filter(s => {
+                const matchSearch = !search || s.StudentID.toLowerCase().includes(search) || s.Name.toLowerCase().includes(search);
+                const matchGrade = !grade || (s.Class && s.Class.startsWith(`ป.${grade}`));
+                const matchClass = !classId || s.Class === classId;
+                const matchStatus = !status || s.Status === status;
+                return matchSearch && matchGrade && matchClass && matchStatus;
+            });
+
+            currentPage = 1;
+            renderStudents();
+        }
 
         function renderStudents() {
-            // ... (pagination logic) ...
+            const start = (currentPage - 1) * perPage;
+            const end = start + perPage;
+            const pageStudents = filteredStudents.slice(start, end);
+
+            const tbody = document.getElementById('studentsTable');
+
+            if (pageStudents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">ไม่พบนักเรียน</td></tr>';
+                return;
+            }
 
             tbody.innerHTML = pageStudents.map(s => `
                 <tr class="border-b border-gray-100 dark:border-gray-700">
