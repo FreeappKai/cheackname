@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายงาน & Export - Smart Attendance</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .sidebar {
+            width: 280px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            z-index: 50;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+        }
+
+        .sidebar-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            border-left-color: #3b82f6;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: #f9fafb;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <aside class="sidebar">
+        <div class="p-6 border-b">
+            <h2 class="text-lg font-bold font-kanit">Admin Panel</h2>
+        </div>
+        <nav class="py-4">
+            <a href="admin-dashboard.html" class="sidebar-item"><span>📊</span><span
+                    class="font-kanit">Dashboard</span></a>
+            <a href="admin-academic-year.html" class="sidebar-item"><span>📅</span><span
+                    class="font-kanit">ปีการศึกษา</span></a>
+            <a href="admin-students.html" class="sidebar-item"><span>👥</span><span
+                    class="font-kanit">นักเรียน</span></a>
+            <a href="admin-teachers.html" class="sidebar-item"><span>👨‍🏫</span><span class="font-kanit">ครู</span></a>
+            <a href="admin-users.html" class="sidebar-item"><span>🔐</span><span class="font-kanit">ผู้ใช้ &
+                    สิทธิ์</span></a>
+            <a href="admin-classes.html" class="sidebar-item"><span>🏫</span><span
+                    class="font-kanit">ชั้นเรียน</span></a>
+            <a href="admin-subjects.html" class="sidebar-item"><span>📚</span><span
+                    class="font-kanit">รายวิชา</span></a>
+            <a href="admin-timetable.html" class="sidebar-item"><span>🗓️</span><span
+                    class="font-kanit">ตารางเรียน</span></a>
+            <a href="admin-attendance.html" class="sidebar-item"><span>📊</span><span
+                    class="font-kanit">ข้อมูลการเข้าเรียน</span></a>
+            <a href="admin-warnings.html" class="sidebar-item"><span>⚠️</span><span
+                    class="font-kanit">แจ้งเตือน</span></a>
+            <a href="admin-reports.html" class="sidebar-item active"><span>📄</span><span
+                    class="font-kanit">รายงาน</span></a>
+            <a href="admin-logs.html" class="sidebar-item"><span>📜</span><span class="font-kanit">Logs</span></a>
+            <a href="admin-settings.html" class="sidebar-item"><span>⚙️</span><span
+                    class="font-kanit">ตั้งค่า</span></a>
+            <a href="admin-backup.html" class="sidebar-item"><span>💾</span><span class="font-kanit">สำรอง</span></a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="p-6">
+            <h1 class="text-3xl font-bold font-kanit mb-6">📄 รายงาน & Export</h1>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Report Config -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-xl font-bold font-kanit mb-4">ประเภทรายงาน</h2>
+
+                        <div class="space-y-3 mb-6">
+                            <label
+                                class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                <input type="radio" name="reportType" value="daily" checked onchange="updateFilters()">
+                                <span>📅 รายงานรายวัน</span>
+                            </label>
+                            <label
+                                class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                <input type="radio" name="reportType" value="weekly" onchange="updateFilters()">
+                                <span>📆 รายงานรายสัปดาห์</span>
+                            </label>
+                            <label
+                                class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                <input type="radio" name="reportType" value="monthly" onchange="updateFilters()">
+                                <span>📊 รายงานรายเดือน</span>
+                            </label>
+                            <label
+                                class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                <input type="radio" name="reportType" value="semester" onchange="updateFilters()">
+                                <span>🎓 รายงานภาคเรียน</span>
+                            </label>
+                            <label
+                                class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                <input type="radio" name="reportType" value="student" onchange="updateFilters()">
+                                <span>👤 รายงานตามนักเรียน</span>
+                            </label>
+                            <label
+                                class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                <input type="radio" name="reportType" value="class" onchange="updateFilters()">
+                                <span>🏫 เปรียบเทียบห้องเรียน</span>
+                            </label>
+                        </div>
+
+                        <div class="space-y-4" id="filtersDiv">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">วันที่:</label>
+                                <input type="date" id="filterDate" class="w-full px-4 py-2 rounded-lg border">
+                            </div>
+                        </div>
+
+                        <button onclick="generateReport()"
+                            class="w-full mt-6 px-6 py-3 bg-blue-500 text-white rounded-lg font-kanit font-bold">
+                            🔍 สร้างรายงาน
+                        </button>
+
+                        <div class="mt-6 space-y-2">
+                            <button onclick="exportPDF()"
+                                class="w-full px-6 py-3 bg-red-500 text-white rounded-lg font-kanit">📑 Export
+                                PDF</button>
+                            <button onclick="exportExcel()"
+                                class="w-full px-6 py-3 bg-green-500 text-white rounded-lg font-kanit">📊 Export
+                                Excel</button>
+                            <button onclick="exportCSV()"
+                                class="w-full px-6 py-3 bg-purple-500 text-white rounded-lg font-kanit">📋 Export
+                                CSV</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Report Preview -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-xl font-bold font-kanit mb-4">👁️ Preview รายงาน</h2>
+                        <div id="reportPreview" class="min-h-[400px]">
+                            <p class="text-gray-500 text-center py-12">กรุณาเลือกประเภทรายงานและกดสร้างรายงาน</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        let reportData = null;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!Session.requireAuth(['ADMIN'])) return;
+            document.getElementById('filterDate').valueAsDate = new Date();
+        });
+
+        function updateFilters() {
+            const type = document.querySelector('input[name="reportType"]:checked').value;
+            const filtersDiv = document.getElementById('filtersDiv');
+
+            let html = '';
+            if (type === 'daily') {
+                html = `
+                    <div>
+                        <label class="block text-sm font-medium mb-2">วันที่:</label>
+                        <input type="date" id="filterDate" class="w-full px-4 py-2 rounded-lg border">
+                    </div>
+                `;
+            } else if (type === 'weekly' || type === 'monthly') {
+                html = `
+                    <div>
+                        <label class="block text-sm font-medium mb-2">วันที่เริ่ม:</label>
+                        <input type="date" id="filterDateStart" class="w-full px-4 py-2 rounded-lg border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">วันที่สิ้นสุด:</label>
+                        <input type="date" id="filterDateEnd" class="w-full px-4 py-2 rounded-lg border">
+                    </div>
+                `;
+            } else if (type === 'student') {
+                html = `
+                    <div>
+                        <label class="block text-sm font-medium mb-2">เลือกนักเรียน:</label>
+                        <select id="filterStudent" class="w-full px-4 py-2 rounded-lg border">
+                            <option value="">กำลังโหลด...</option>
+                        </select>
+                    </div>
+                `;
+            } else if (type === 'class') {
+                html = `
+                    <div>
+                        <label class="block text-sm font-medium mb-2">ระดับชั้น:</label>
+                        <select id="filterGrade" class="w-full px-4 py-2 rounded-lg border">
+                            <option value="">ทุกชั้น</option>
+                            <option value="1">ป.1</option>
+                            <option value="2">ป.2</option>
+                            <option value="3">ป.3</option>
+                            <option value="4">ป.4</option>
+                            <option value="5">ป.5</option>
+                            <option value="6">ป.6</option>
+                        </select>
+                    </div>
+                `;
+            }
+
+            filtersDiv.innerHTML = html;
+        }
+
+        async function generateReport() {
+            const type = document.querySelector('input[name="reportType"]:checked').value;
+
+            Utils.showLoader();
+            try {
+                const result = await API.generateReport({ type });
+                if (result.success) {
+                    reportData = result.data;
+                    renderPreview(type);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        function renderPreview(type) {
+            const preview = document.getElementById('reportPreview');
+
+            if (!reportData || reportData.length === 0) {
+                preview.innerHTML = '<p class="text-gray-500 text-center py-12">ไม่มีข้อมูล</p>';
+                return;
+            }
+
+            const stats = calculateStats(reportData);
+
+            preview.innerHTML = `
+                <div class="mb-6">
+                    <h3 class="text-2xl font-bold font-kanit mb-2">${getReportTitle(type)}</h3>
+                    <p class="text-gray-600">วันที่สร้าง: ${new Date().toLocaleDateString('th-TH')}</p>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="p-4 bg-green-50 rounded-lg">
+                        <div class="text-3xl font-bold text-green-600">${stats.present}</div>
+                        <div class="text-sm text-gray-600">มาเรียน</div>
+                    </div>
+                    <div class="p-4 bg-yellow-50 rounded-lg">
+                        <div class="text-3xl font-bold text-yellow-600">${stats.late}</div>
+                        <div class="text-sm text-gray-600">มาสาย</div>
+                    </div>
+                    <div class="p-4 bg-red-50 rounded-lg">
+                        <div class="text-3xl font-bold text-red-600">${stats.absent}</div>
+                        <div class="text-sm text-gray-600">ขาดเรียน</div>
+                    </div>
+                </div>
+                
+                <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+                    <div class="text-center">
+                        <div class="text-5xl font-bold text-blue-600">${stats.rate}%</div>
+                        <div class="text-sm text-gray-600 mt-2">อัตราการมาเรียน</div>
+                    </div>
+                </div>
+                
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="text-left py-2 px-4">วันที่</th>
+                            <th class="text-left py-2 px-4">นักเรียน</th>
+                            <th class="text-left py-2 px-4">ห้อง</th>
+                            <th class="text-center py-2 px-4">สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${reportData.slice(0, 50).map(r => `
+                            <tr class="border-b">
+                                <td class="py-2 px-4">${r.Date}</td>
+                                <td class="py-2 px-4">${r.StudentName || r.StudentID}</td>
+                                <td class="py-2 px-4">${r.Class}</td>
+                                <td class="text-center py-2 px-4">
+                                    <span class="px-2 py-1 rounded text-xs ${r.Status === 'PRESENT' ? 'bg-green-100 text-green-800' :
+                    r.Status === 'LATE' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                }">${r.Status}</span>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function calculateStats(data) {
+            const present = data.filter(r => r.Status === 'PRESENT').length;
+            const late = data.filter(r => r.Status === 'LATE').length;
+            const absent = data.filter(r => r.Status === 'ABSENT').length;
+            const total = data.length;
+            const rate = total > 0 ? Math.round((present / total) * 100) : 0;
+
+            return { present, late, absent, rate };
+        }
+
+        function getReportTitle(type) {
+            const titles = {
+                'daily': 'รายงานรายวัน',
+                'weekly': 'รายงานรายสัปดาห์',
+                'monthly': 'รายงานรายเดือน',
+                'semester': 'รายงานภาคเรียน',
+                'student': 'รายงานตามนักเรียน',
+                'class': 'รายงานเปรียบเทียบห้องเรียน'
+            };
+            return titles[type] || 'รายงาน';
+        }
+
+        function exportPDF() {
+            if (!reportData) {
+                Utils.showNotification('กรุณาสร้างรายงานก่อน', 'error');
+                return;
+            }
+            Utils.showNotification('กำลัง Export PDF... (ใช้ jsPDF library)', 'info');
+        }
+
+        function exportExcel() {
+            if (!reportData) {
+                Utils.showNotification('กรุณาสร้างรายงานก่อน', 'error');
+                return;
+            }
+
+            const ws = XLSX.utils.json_to_sheet(reportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Report");
+            XLSX.writeFile(wb, `attendance_report_${new Date().toISOString().split('T')[0]}.xlsx`);
+            Utils.showNotification('Export Excel สำเร็จ', 'success');
+        }
+
+        function exportCSV() {
+            if (!reportData) {
+                Utils.showNotification('กรุณาสร้างรายงานก่อน', 'error');
+                return;
+            }
+
+            const csv = [
+                Object.keys(reportData[0]).join(','),
+                ...reportData.map(row => Object.values(row).join(','))
+            ].join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `attendance_report_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            Utils.showNotification('Export CSV สำเร็จ', 'success');
+        }
+
+        function logout() { Session.clear(); window.location.href = 'index.html'; }
+    </script>
+</body>
+
+</html>

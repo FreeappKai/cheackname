@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตั้งค่าระบบ - Smart Attendance</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .sidebar {
+            width: 280px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            z-index: 50;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+        }
+
+        .sidebar-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            border-left-color: #3b82f6;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: #f9fafb;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <aside class="sidebar">
+        <div class="p-6 border-b">
+            <h2 class="text-lg font-bold font-kanit">Admin Panel</h2>
+        </div>
+        <nav class="py-4">
+            <a href="admin-dashboard.html" class="sidebar-item"><span>📊</span><span
+                    class="font-kanit">Dashboard</span></a>
+            <a href="admin-academic-year.html" class="sidebar-item"><span>📅</span><span
+                    class="font-kanit">ปีการศึกษา</span></a>
+            <a href="admin-students.html" class="sidebar-item"><span>👥</span><span
+                    class="font-kanit">นักเรียน</span></a>
+            <a href="admin-teachers.html" class="sidebar-item"><span>👨‍🏫</span><span class="font-kanit">ครู</span></a>
+            <a href="admin-users.html" class="sidebar-item"><span>🔐</span><span class="font-kanit">ผู้ใช้ &
+                    สิทธิ์</span></a>
+            <a href="admin-classes.html" class="sidebar-item"><span>🏫</span><span
+                    class="font-kanit">ชั้นเรียน</span></a>
+            <a href="admin-subjects.html" class="sidebar-item"><span>📚</span><span
+                    class="font-kanit">รายวิชา</span></a>
+            <a href="admin-timetable.html" class="sidebar-item"><span>🗓️</span><span
+                    class="font-kanit">ตารางเรียน</span></a>
+            <a href="admin-attendance.html" class="sidebar-item"><span>📊</span><span
+                    class="font-kanit">ข้อมูลการเข้าเรียน</span></a>
+            <a href="admin-warnings.html" class="sidebar-item"><span>⚠️</span><span
+                    class="font-kanit">แจ้งเตือน</span></a>
+            <a href="admin-reports.html" class="sidebar-item"><span>📄</span><span class="font-kanit">รายงาน</span></a>
+            <a href="admin-logs.html" class="sidebar-item"><span>📜</span><span class="font-kanit">Logs</span></a>
+            <a href="admin-settings.html" class="sidebar-item active"><span>⚙️</span><span
+                    class="font-kanit">ตั้งค่า</span></a>
+            <a href="admin-backup.html" class="sidebar-item"><span>💾</span><span class="font-kanit">สำรอง</span></a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="p-6">
+            <h1 class="text-3xl font-bold font-kanit mb-6">⚙️ ตั้งค่าระบบ</h1>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- School Info -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-bold font-kanit mb-4">🏫 ข้อมูลโรงเรียน</h2>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">ชื่อโรงเรียน (ไทย)</label>
+                        <input type="text" id="schoolNameTH" class="w-full px-4 py-2 rounded-lg border"
+                            value="โรงเรียนสาธิต">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">ชื่อโรงเรียน (อังกฤษ)</label>
+                        <input type="text" id="schoolNameEN" class="w-full px-4 py-2 rounded-lg border"
+                            value="Demonstration School">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">ที่อยู่</label>
+                        <textarea id="schoolAddress" rows="3"
+                            class="w-full px-4 py-2 rounded-lg border">123 ถนนศรีนคร กรุงเทพฯ 10100</textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">โลโก้โรงเรียน</label>
+                        <input type="file" id="schoolLogo" accept="image/*" class="w-full px-4 py-2 rounded-lg border">
+                    </div>
+
+                    <button onclick="saveSchoolInfo()"
+                        class="w-full px-6 py-3 bg-blue-500 text-white rounded-lg font-kanit">💾
+                        บันทึกข้อมูลโรงเรียน</button>
+                </div>
+
+                <!-- Attendance Settings -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-bold font-kanit mb-4">📊 ตั้งค่าการเข้าเรียน</h2>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">เวลามาสาย (นาที หลังเวลา)</label>
+                        <input type="number" id="lateThreshold" class="w-full px-4 py-2 rounded-lg border" value="15">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">เวลาเริ่มเรียน (เช้า)</label>
+                        <input type="time" id="morningStart" class="w-full px-4 py-2 rounded-lg border" value="08:00">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">เวลาเลิกเรียน (บ่าย)</label>
+                        <input type="time" id="afternoonEnd" class="w-full px-4 py-2 rounded-lg border" value="15:30">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="enableFaceRecognition" checked>
+                            <span>เปิดใช้ Face Recognition</span>
+                        </label>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="autoLockAfterCheckIn" checked>
+                            <span>ล็อคการเช็คชื่อหลังครูบันทึก (ครูต้อง unlock ก่อนแก้ไข)</span>
+                        </label>
+                    </div>
+
+                    <button onclick="saveAttendanceSettings()"
+                        class="w-full px-6 py-3 bg-blue-500 text-white rounded-lg font-kanit">💾
+                        บันทึกการตั้งค่า</button>
+                </div>
+
+                <!-- Notification Settings -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-bold font-kanit mb-4">🔔 ตั้งค่าการแจ้งเตือน</h2>
+
+                    <div class="mb-4">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="notifyAbsent" checked>
+                            <span>แจ้งเตือนผู้ปกครองเมื่อนักเรียนขาดเรียน</span>
+                        </label>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="notifyLate" checked>
+                            <span>แจ้งเตือนผู้ปกครองเมื่อนักเรียนมาสาย</span>
+                        </label>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="notifyHighRisk" checked>
+                            <span>แจ้งเตือนผู้บริหารเมื่อมีนักเรียนเสี่ยง (High Risk)</span>
+                        </label>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">อีเมลผู้บริหาร</label>
+                        <input type="email" id="adminEmail" class="w-full px-4 py-2 rounded-lg border"
+                            placeholder="admin@school.ac.th">
+                    </div>
+
+                    <button onclick="saveNotificationSettings()"
+                        class="w-full px-6 py-3 bg-blue-500 text-white rounded-lg font-kanit">💾
+                        บันทึกการแจ้งเตือน</button>
+                </div>
+
+                <!-- System Settings -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-bold font-kanit mb-4">🔧 การตั้งค่าระบบ</h2>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">ภาษาเริ่มต้น</label>
+                        <select id="defaultLanguage" class="w-full px-4 py-2 rounded-lg border">
+                            <option value="th">ภาษาไทย</option>
+                            <option value="en">English</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">จำนวนวันเก็บ Logs</label>
+                        <input type="number" id="logRetentionDays" class="w-full px-4 py-2 rounded-lg border"
+                            value="90">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="enableMaintenance">
+                            <span>⚠️ เปิดโหมด Maintenance (ปิดระบบชั่วคราว)</span>
+                        </label>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">Google Sheets Spreadsheet ID</label>
+                        <input type="text" id="spreadsheetID"
+                            class="w-full px-4 py-2 rounded-lg border font-mono text-sm" placeholder="1abc...xyz">
+                        <p class="text-xs text-gray-500 mt-1">ID ของ Google Sheets ที่เก็บข้อมูล</p>
+                    </div>
+
+                    <button onclick="saveSystemSettings()"
+                        class="w-full px-6 py-3 bg-blue-500 text-white rounded-lg font-kanit">💾
+                        บันทึกการตั้งค่าระบบ</button>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="bg-red-50 border border-red-200 p-6 rounded-lg shadow-md mt-6">
+                <h2 class="text-xl font-bold font-kanit text-red-800 mb-4">⚠️ Danger Zone</h2>
+                <div class="flex gap-4">
+                    <button onclick="clearAllCache()"
+                        class="px-6 py-3 bg-yellow-500 text-white rounded-lg font-kanit">🗑️ ล้าง Cache ทั้งหมด</button>
+                    <button onclick="resetSystem()" class="px-6 py-3 bg-red-500 text-white rounded-lg font-kanit">🔄
+                        รีเซ็ตระบบ (ระวัง!)</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            if (!Session.requireAuth(['ADMIN'])) return;
+            await loadSettings();
+        });
+
+        async function loadSettings() {
+            Utils.showLoader();
+            try {
+                const result = await API.getSettings();
+                if (result.success) {
+                    const settings = result.data;
+                    // Populate fields with loaded settings
+                    if (settings.schoolNameTH) document.getElementById('schoolNameTH').value = settings.schoolNameTH;
+                    if (settings.lateThreshold) document.getElementById('lateThreshold').value = settings.lateThreshold;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        async function saveSchoolInfo() {
+            Utils.showLoader();
+            try {
+                const data = {
+                    schoolNameTH: document.getElementById('schoolNameTH').value,
+                    schoolNameEN: document.getElementById('schoolNameEN').value,
+                    schoolAddress: document.getElementById('schoolAddress').value
+                };
+
+                const result = await API.saveSettings({ type: 'school', data });
+                if (result.success) {
+                    Utils.showNotification('บันทึกข้อมูลโรงเรียนสำเร็จ', 'success');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        async function saveAttendanceSettings() {
+            Utils.showLoader();
+            try {
+                const data = {
+                    lateThreshold: document.getElementById('lateThreshold').value,
+                    morningStart: document.getElementById('morningStart').value,
+                    afternoonEnd: document.getElementById('afternoonEnd').value,
+                    enableFaceRecognition: document.getElementById('enableFaceRecognition').checked,
+                    autoLockAfterCheckIn: document.getElementById('autoLockAfterCheckIn').checked
+                };
+
+                const result = await API.saveSettings({ type: 'attendance', data });
+                if (result.success) {
+                    Utils.showNotification('บันทึกการตั้งค่าสำเร็จ', 'success');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        async function saveNotificationSettings() {
+            Utils.showLoader();
+            try {
+                const data = {
+                    notifyAbsent: document.getElementById('notifyAbsent').checked,
+                    notifyLate: document.getElementById('notifyLate').checked,
+                    notifyHighRisk: document.getElementById('notifyHighRisk').checked,
+                    adminEmail: document.getElementById('adminEmail').value
+                };
+
+                const result = await API.saveSettings({ type: 'notification', data });
+                if (result.success) {
+                    Utils.showNotification('บันทึกการแจ้งเตือนสำเร็จ', 'success');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        async function saveSystemSettings() {
+            Utils.showLoader();
+            try {
+                const data = {
+                    defaultLanguage: document.getElementById('defaultLanguage').value,
+                    logRetentionDays: document.getElementById('logRetentionDays').value,
+                    enableMaintenance: document.getElementById('enableMaintenance').checked,
+                    spreadsheetID: document.getElementById('spreadsheetID').value
+                };
+
+                const result = await API.saveSettings({ type: 'system', data });
+                if (result.success) {
+                    Utils.showNotification('บันทึกการตั้งค่าระบบสำเร็จ', 'success');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        async function clearAllCache() {
+            if (!confirm('ต้องการล้าง Cache ทั้งหมดหรือไม่?')) return;
+
+            localStorage.clear();
+            Utils.showNotification('ล้าง Cache สำเร็จ', 'success');
+        }
+
+        async function resetSystem() {
+            const confirmation = prompt('พิมพ์ "RESET" เพื่อยืนยันการรีเซ็ตระบบ (ระวัง! จะลบข้อมูลทั้งหมด)');
+            if (confirmation !== 'RESET') return;
+
+            Utils.showLoader();
+            try {
+                const result = await API.resetSystem();
+                if (result.success) {
+                    Utils.showNotification('รีเซ็ตระบบสำเร็จ กำลัง Redirect...', 'success');
+                    setTimeout(() => window.location.href = 'index.html', 2000);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        function logout() { Session.clear(); window.location.href = 'index.html'; }
+    </script>
+</body>
+
+</html>

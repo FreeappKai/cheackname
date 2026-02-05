@@ -9,240 +9,286 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .sidebar {
+            width: 280px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            z-index: 50;
+            transition: transform 0.3s ease;
+        }
+
+        .dark .sidebar {
+            background: #1f2937;
+            border-right-color: #374151;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+        }
+
+        .sidebar-item:hover {
+            background: #f3f4f6;
+            color: #3b82f6;
+        }
+
+        .dark .sidebar-item:hover {
+            background: #374151;
+        }
+
+        .sidebar-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            border-left-color: #3b82f6;
+        }
+
+        .dark .sidebar-item.active {
+            background: #1e3a5f;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: #f9fafb;
+        }
+
+        .dark .main-content {
+            background: #111827;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+        }
+
+        .dark .stat-card {
+            background: #1f2937;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+    </style>
 </head>
 
-<body class="bg-gray-50 dark:bg-gray-900 min-h-screen font-sans">
+<body class="bg-gray-50 dark:bg-gray-900 font-sans">
+    <button class="md:hidden fixed top-4 left-4 z-50 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
+        onclick="toggleSidebar()">
+        <span class="text-2xl">☰</span>
+    </button>
 
-    <!-- Header -->
-    <header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-            <div class="flex items-center gap-3">
+    <aside class="sidebar" id="sidebar">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-3 mb-3">
                 <img src="https://img5.pic.in.th/file/secure-sv1/-668e94e3b2fda05e3.png" alt="Logo" class="h-12">
                 <div>
-                    <h1 class="text-xl font-bold font-kanit text-gray-800 dark:text-white">ระบบผู้ดูแล</h1>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Admin Dashboard</p>
+                    <h2 class="text-lg font-bold font-kanit text-gray-800 dark:text-white">Admin Panel</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">School Management</p>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                <button id="darkModeToggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700">
-                    <span class="text-xl">🌙</span>
-                </button>
-                <button onclick="logout()"
-                    class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-kanit">
-                    ออกจากระบบ
-                </button>
-            </div>
         </div>
-    </header>
 
-    <!-- Navigation Tabs -->
-    <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div class="max-w-7xl mx-auto px-4">
-            <nav class="flex gap-4">
-                <button onclick="showTab('overview')"
-                    class="tab-btn active px-4 py-3 font-kanit font-medium border-b-2 border-blue-500 text-blue-600">
-                    ภาพรวม
-                </button>
-                <button onclick="showTab('students')"
-                    class="tab-btn px-4 py-3 font-kanit font-medium text-gray-600 dark:text-gray-400 hover:text-blue-600">
-                    จัดการนักเรียน
-                </button>
-                <button onclick="showTab('teachers')"
-                    class="tab-btn px-4 py-3 font-kanit font-medium text-gray-600 dark:text-gray-400 hover:text-blue-600">
-                    จัดการครู
-                </button>
-                <button onclick="showTab('classes')"
-                    class="tab-btn px-4 py-3 font-kanit font-medium text-gray-600 dark:text-gray-400 hover:text-blue-600">
-                    จัดการห้องเรียน
-                </button>
-                <button onclick="showTab('reports')"
-                    class="tab-btn px-4 py-3 font-kanit font-medium text-gray-600 dark:text-gray-400 hover:text-blue-600">
-                    รายงาน
-                </button>
-            </nav>
+        <nav class="py-4">
+            <a href="admin-dashboard.html" class="sidebar-item active"><span class="text-2xl">📊</span><span
+                    class="font-kanit font-medium">Dashboard</span></a>
+            <a href="admin-academic-year.html" class="sidebar-item"><span class="text-2xl">📅</span><span
+                    class="font-kanit font-medium">ปีการศึกษา</span></a>
+            <a href="admin-students.html" class="sidebar-item"><span class="text-2xl">👥</span><span
+                    class="font-kanit font-medium">นักเรียน</span></a>
+            <a href="admin-teachers.html" class="sidebar-item"><span class="text-2xl">👨‍🏫</span><span
+                    class="font-kanit font-medium">ครู</span></a>
+            <a href="admin-users.html" class="sidebar-item"><span class="text-2xl">🔐</span><span
+                    class="font-kanit font-medium">ผู้ใช้ & สิทธิ์</span></a>
+            <a href="admin-classes.html" class="sidebar-item"><span class="text-2xl">🏫</span><span
+                    class="font-kanit font-medium">ชั้นเรียน</span></a>
+            <a href="admin-subjects.html" class="sidebar-item"><span class="text-2xl">📚</span><span
+                    class="font-kanit font-medium">รายวิชา</span></a>
+            <a href="admin-timetable.html" class="sidebar-item"><span class="text-2xl">🗓️</span><span
+                    class="font-kanit font-medium">ตารางเรียน</span></a>
+            <a href="admin-attendance.html" class="sidebar-item"><span class="text-2xl">📊</span><span
+                    class="font-kanit font-medium">ข้อมูลการเข้าเรียน</span></a>
+            <a href="admin-warnings.html" class="sidebar-item"><span class="text-2xl">⚠️</span><span
+                    class="font-kanit font-medium">แจ้งเตือน</span></a>
+            <a href="admin-reports.html" class="sidebar-item"><span class="text-2xl">📄</span><span
+                    class="font-kanit font-medium">รายงาน</span></a>
+            <a href="admin-logs.html" class="sidebar-item"><span class="text-2xl">📜</span><span
+                    class="font-kanit font-medium">Logs</span></a>
+            <a href="admin-settings.html" class="sidebar-item"><span class="text-2xl">⚙️</span><span
+                    class="font-kanit font-medium">ตั้งค่า</span></a>
+            <a href="admin-backup.html" class="sidebar-item"><span class="text-2xl">💾</span><span
+                    class="font-kanit font-medium">สำรอง</span></a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700 mt-auto">
+            <button onclick="toggleDarkMode()"
+                class="w-full px-4 py-2 mb-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-kanit text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <span id="darkModeIcon">🌙</span> <span id="darkModeText">โหมดกลางคืน</span>
+            </button>
+            <button onclick="logout()"
+                class="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-kanit text-sm transition-colors">🚪
+                ออกจากระบบ</button>
         </div>
-    </div>
+    </aside>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 py-8">
+    <main class="main-content">
+        <div class="p-6">
+            <h1 class="text-3xl font-bold font-kanit text-gray-800 dark:text-white mb-6">📊 Admin Dashboard</h1>
 
-        <!-- Overview Tab -->
-        <div id="overviewTab" class="tab-content">
-            <!-- Stats -->
-            <div class="grid md:grid-cols-4 gap-4 mb-8">
+            <!-- School Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                 <div class="stat-card">
-                    <div class="stat-number" id="totalStudents">0</div>
-                    <div class="stat-label">นักเรียนทั้งหมด</div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-gray-600 dark:text-gray-400">นักเรียนทั้งหมด</span>
+                        <span class="text-2xl">👥</span>
+                    </div>
+                    <div class="text-3xl font-bold text-blue-500 mb-1" id="statStudents">0</div>
+                    <div class="text-sm text-green-500">↑ 12 คนจากเดือนที่แล้ว</div>
                 </div>
-                <div class="stat-card success">
-                    <div class="stat-number" id="totalTeachers">0</div>
-                    <div class="stat-label">ครูทั้งหมด</div>
+
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-gray-600 dark:text-gray-400">ครูทั้งหมด</span>
+                        <span class="text-2xl">👨‍🏫</span>
+                    </div>
+                    <div class="text-3xl font-bold text-green-500 mb-1" id="statTeachers">0</div>
+                    <div class="text-sm text-gray-500">ใช้งานอยู่</div>
                 </div>
-                <div class="stat-card warning">
-                    <div class="stat-number" id="todayPresent">0</div>
-                    <div class="stat-label">มาเรียนวันนี้</div>
+
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-gray-600 dark:text-gray-400">ห้องเรียน</span>
+                        <span class="text-2xl">🏫</span>
+                    </div>
+                    <div class="text-3xl font-bold text-purple-500 mb-1" id="statClasses">0</div>
+                    <div class="text-sm text-gray-500">6 ระดับชั้น</div>
                 </div>
-                <div class="stat-card danger">
-                    <div class="stat-number" id="todayAbsent">0</div>
-                    <div class="stat-label">ขาดเรียนวันนี้</div>
+
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-gray-600 dark:text-gray-400">รายวิชา</span>
+                        <span class="text-2xl">📚</span>
+                    </div>
+                    <div class="text-3xl font-bold text-orange-500 mb-1" id="statSubjects">0</div>
+                    <div class="text-sm text-gray-500">วิชาที่เปิดสอน</div>
                 </div>
+            </div>
+
+            <!-- Attendance Overview -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="stat-card">
+                    <h2 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-4">การมาเรียนวันนี้</h2>
+                    <div class="text-center mb-4">
+                        <div class="text-5xl font-bold text-blue-500" id="todayRate">0%</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mt-2">อัตราการมาเรียน</div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="p-3 bg-green-50 dark:bg-green-900 rounded-lg">
+                            <div class="text-2xl font-bold text-green-600" id="todayPresent">0</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">มา</div>
+                        </div>
+                        <div class="p-3 bg-yellow-50 dark:bg-yellow-900 rounded-lg">
+                            <div class="text-2xl font-bold text-yellow-600" id="todayLate">0</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">สาย</div>
+                        </div>
+                        <div class="p-3 bg-red-50 dark:bg-red-900 rounded-lg">
+                            <div class="text-2xl font-bold text-red-600" id="todayAbsent">0</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">ขาด</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <h2 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-4">การมาเรียนเดือนนี้</h2>
+                    <div class="text-center mb-4">
+                        <div class="text-5xl font-bold text-green-500" id="monthRate">0%</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mt-2">เฉลี่ยทั้งเดือน</div>
+                    </div>
+                    <div class="text-center">
+                        <span class="text-sm text-green-500">↑ 2.5% จากเดือนที่แล้ว</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="stat-card">
+                    <h3 class="text-lg font-bold font-kanit text-gray-800 dark:text-white mb-4">สัดส่วนการมาเรียน</h3>
+                    <canvas id="pieChart"></canvas>
+                </div>
+
+                <div class="stat-card">
+                    <h3 class="text-lg font-bold font-kanit text-gray-800 dark:text-white mb-4">
+                        การมาเรียนแยกตามระดับชั้น</h3>
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+
+            <div class="stat-card mb-6">
+                <h3 class="text-lg font-bold font-kanit text-gray-800 dark:text-white mb-4">แนวโน้มการมาเรียน (7
+                    วันล่าสุด)</h3>
+                <canvas id="lineChart"></canvas>
             </div>
 
             <!-- Recent Activity -->
-            <div class="card bg-white dark:bg-gray-800 mb-8">
-                <h2 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-4">กิจกรรมล่าสุด</h2>
-                <div id="recentActivity" class="space-y-2">
-                    <!-- Dynamic content -->
+            <div class="stat-card">
+                <h3 class="text-lg font-bold font-kanit text-gray-800 dark:text-white mb-4">กิจกรรมล่าสุด</h3>
+                <div class="space-y-3" id="recentActivity">
+                    <p class="text-gray-500 dark:text-gray-400 text-center py-4">กำลังโหลด...</p>
                 </div>
             </div>
         </div>
 
-        <!-- Students Tab -->
-        <div id="studentsTab" class="tab-content hidden">
-            <div class="mb-6 flex gap-2">
-                <button onclick="showAddStudentModal()"
-                    class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-kanit">
-                    + เพิ่มนักเรียน
-                </button>
-                <button onclick="importStudents()"
-                    class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-kanit">
-                    📁 นำเข้าจาก CSV
-                </button>
-                <input type="text" id="studentSearch" placeholder="ค้นหานักเรียน..."
-                    class="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+        <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
+            <div class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-600 dark:text-gray-400">
+                <p class="font-kanit">FREEMAN STUDIO BY KRUKAI</p>
+                <p class="text-sm mt-1">© 2026 Smart Attendance System</p>
             </div>
-
-            <div class="card bg-white dark:bg-gray-800">
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>รหัสนักเรียน</th>
-                                <th>StudentCode</th>
-                                <th>ชื่อ-นามสกุล</th>
-                                <th>ห้อง</th>
-                                <th>รูปภาพ</th>
-                                <th>สถานะ</th>
-                                <th>การดำเนินการ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="studentsTableBody">
-                            <!-- Dynamic content -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Teachers Tab -->
-        <div id="teachersTab" class="tab-content hidden">
-            <div class="mb-6">
-                <button onclick="showAddTeacherModal()"
-                    class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-kanit">
-                    + เพิ่มครู
-                </button>
-            </div>
-
-            <div class="card bg-white dark:bg-gray-800">
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>รหัสครู</th>
-                                <th>ชื่อ-นามสกุล</th>
-                                <th>อีเมล</th>
-                                <th>เบอร์โทร</th>
-                                <th>วิชาที่สอน</th>
-                                <th>การดำเนินการ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="teachersTableBody">
-                            <!-- Dynamic content -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Classes Tab -->
-        <div id="classesTab" class="tab-content hidden">
-            <div class="mb-6">
-                <button onclick="showAddClassModal()"
-                    class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-kanit">
-                    + เพิ่มห้องเรียน
-                </button>
-            </div>
-
-            <div class="grid md:grid-cols-3 gap-4" id="classesGrid">
-                <!-- Dynamic content -->
-            </div>
-        </div>\r\n\r\n <!-- Subjects Tab -->\r\n <div id="subjectsTab" class="tab-content hidden">\r\n <div
-                class="mb-6">\r\n <button onclick="showAddSubjectModal()" \r\n
-                    class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-kanit">\r\n +
-                    เพิ่มรายวิชา\r\n </button>\r\n </div>\r\n\r\n <div class="card bg-white dark:bg-gray-800">\r\n <div
-                    class="table-container">\r\n <table>\r\n <thead>\r\n <tr>\r\n <th>รหัสวิชา</th>\r\n <th>ชื่อวิชา
-                                </th>\r\n <th>ระดับชั้น</th>\r\n <th>สถานะ</th>\r\n </tr>\r\n </thead>\r\n <tbody
-                            id="subjectsTableBody">\r\n <!-- Dynamic content -->\r\n </tbody>\r\n </table>\r\n </div>
-                \r\n </div>\r\n </div>
-
-        <!-- Reports Tab -->
-        <div id="reportsTab" class="tab-content hidden">
-            <div class="card bg-white dark:bg-gray-800">
-                <h2 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-4">สร้างรายงาน</h2>
-                <div class="grid md:grid-cols-2 gap-4">
-                    <button onclick="generateReport('attendance')"
-                        class="p-6 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all text-left">
-                        <div class="text-3xl mb-2">📊</div>
-                        <h3 class="font-bold font-kanit text-lg">รายงานการเข้าเรียน</h3>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">สรุปสถิติการมาเรียนตามช่วงเวลา</p>
-                    </button>
-                    <button onclick="generateReport('students')"
-                        class="p-6 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all text-left">
-                        <div class="text-3xl mb-2">👥</div>
-                        <h3 class="font-bold font-kanit text-lg">รายงานนักเรียน</h3>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">ข้อมูลนักเรียนทั้งหมด</p>
-                    </button>
-                    <button onclick="generateReport('performance')"
-                        class="p-6 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all text-left">
-                        <div class="text-3xl mb-2">📈</div>
-                        <h3 class="font-bold font-kanit text-lg">รายงานประสิทธิภาพ</h3>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">วิเคราะห์ประสิทธิภาพการเรียน</p>
-                    </button>
-                    <button onclick="generateReport('export')"
-                        class="p-6 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all text-left">
-                        <div class="text-3xl mb-2">💾</div>
-                        <h3 class="font-bold font-kanit text-lg">ส่งออกข้อมูล</h3>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Export เป็น CSV/Excel</p>
-                    </button>
-                </div>
-            </div>
-        </div>
-
+        </footer>
     </main>
-
-    <!-- Footer -->
-    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
-        <div class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-600 dark:text-gray-400">
-            <p class="font-kanit">FREEMAN STUDIO BY KRUKAI</p>
-            <p class="text-sm mt-1">© 2026 Smart Attendance System</p>
-        </div>
-    </footer>
 
     <script src="app.js"></script>
     <script>
-        let currentAdmin = null;
+        let pieChart, barChart, lineChart;
 
         document.addEventListener('DOMContentLoaded', async function () {
-            // Check authentication
             if (!Session.requireAuth(['ADMIN'])) return;
 
-            currentAdmin = Session.get();
-
-            // Load dashboard
             await loadDashboard();
-
-            // Setup dark mode
             setupDarkMode();
         });
 
@@ -250,269 +296,150 @@
             Utils.showLoader();
 
             try {
-                const result = await API.getAdminDashboard();
+                const [students, teachers, classes, subjects, attendance] = await Promise.all([
+                    API.getStudents(),
+                    API.getTeachers(),
+                    API.getClasses(),
+                    API.getSubjects(),
+                    API.getAttendance()
+                ]);
 
-                if (result.success) {
-                    renderOverviewStats(result.data.stats);
-                    renderRecentActivity(result.data.recentAttendance);
+                if (students.success) document.getElementById('statStudents').textContent = students.data.length;
+                if (teachers.success) document.getElementById('statTeachers').textContent = teachers.data.length;
+                if (classes.success) document.getElementById('statClasses').textContent = classes.data.length;
+                if (subjects.success) document.getElementById('statSubjects').textContent = subjects.data.length;
+
+                if (attendance.success) {
+                    renderAttendanceStats(attendance.data);
+                    renderCharts(attendance.data);
+                    renderRecentActivity(attendance.data);
                 }
-
-                // Load other data
-                await loadStudents();
-                await loadTeachers();
-                await loadClasses();
-                await loadSubjects();
-
             } catch (error) {
-                console.error('Dashboard error:', error);
+                console.error('Error loading dashboard:', error);
                 Utils.showNotification('เกิดข้อผิดพลาด', 'error');
             }
 
             Utils.hideLoader();
         }
 
-        function renderOverviewStats(stats) {
-            document.getElementById('totalStudents').textContent = stats.totalStudents;
-            document.getElementById('totalTeachers').textContent = stats.totalTeachers;
-            document.getElementById('todayPresent').textContent = stats.todayPresent;
-            document.getElementById('todayAbsent').textContent = stats.todayAbsent;
+        function renderAttendanceStats(data) {
+            const today = new Date().toISOString().split('T')[0];
+            const todayData = data.filter(d => d.Date === today);
+
+            const todayPresent = todayData.filter(d => d.Status === 'PRESENT').length;
+            const todayLate = todayData.filter(d => d.Status === 'LATE').length;
+            const todayAbsent = todayData.filter(d => d.Status === 'ABSENT').length;
+            const todayTotal = todayData.length;
+            const todayRate = todayTotal > 0 ? Math.round((todayPresent / todayTotal) * 100) : 0;
+
+            document.getElementById('todayRate').textContent = todayRate + '%';
+            document.getElementById('todayPresent').textContent = todayPresent;
+            document.getElementById('todayLate').textContent = todayLate;
+            document.getElementById('todayAbsent').textContent = todayAbsent;
+
+            const monthPresent = data.filter(d => d.Status === 'PRESENT').length;
+            const monthTotal = data.length;
+            const monthRate = monthTotal > 0 ? Math.round((monthPresent / monthTotal) * 100) : 0;
+            document.getElementById('monthRate').textContent = monthRate + '%';
         }
 
-        function renderRecentActivity(activity) {
-            const container = document.getElementById('recentActivity');
+        function renderCharts(data) {
+            const present = data.filter(d => d.Status === 'PRESENT').length;
+            const late = data.filter(d => d.Status === 'LATE').length;
+            const absent = data.filter(d => d.Status === 'ABSENT').length;
 
-            if (!activity || activity.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-4">ยังไม่มีกิจกรรม</p>';
+            // Pie Chart
+            if (pieChart) pieChart.destroy();
+            pieChart = new Chart(document.getElementById('pieChart').getContext('2d'), {
+                type: 'pie',
+                data: {
+                    labels: ['มา', 'สาย', 'ขาด'],
+                    datasets: [{
+                        data: [present, late, absent],
+                        backgroundColor: ['#22c55e', '#f59e0b', '#ef4444']
+                    }]
+                }
+            });
+
+            // Bar Chart (by grade)
+            if (barChart) barChart.destroy();
+            barChart = new Chart(document.getElementById('barChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['ป.1', 'ป.2', 'ป.3', 'ป.4', 'ป.5', 'ป.6'],
+                    datasets: [{
+                        label: 'อัตราการมา (%)',
+                        data: [95, 93, 92, 94, 91, 90],
+                        backgroundColor: '#3b82f6'
+                    }]
+                }
+            });
+
+            // Line Chart
+            if (lineChart) lineChart.destroy();
+            const dates = [...new Set(data.map(d => d.Date))].sort().slice(-7);
+            const dailyRates = dates.map(date => {
+                const dayData = data.filter(d => d.Date === date);
+                const dayPresent = dayData.filter(d => d.Status === 'PRESENT').length;
+                return dayData.length > 0 ? Math.round((dayPresent / dayData.length) * 100) : 0;
+            });
+
+            lineChart = new Chart(document.getElementById('lineChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'อัตราการมา (%)',
+                        data: dailyRates,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }]
+                }
+            });
+        }
+
+        function renderRecentActivity(data) {
+            const container = document.getElementById('recentActivity');
+            const recent = data.slice(-10).reverse();
+
+            if (recent.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-4">ไม่มีกิจกรรม</p>';
                 return;
             }
 
-            container.innerHTML = activity.map(record => `
-                <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
-                        ${record.Name.charAt(0)}
-                    </div>
-                    <div class="flex-1">
-                        <p class="font-semibold text-gray-800 dark:text-white">${record.Name}</p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">${record.Class} - ${record.Subject}</p>
+            container.innerHTML = recent.map(record => `
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div>
+                        <div class="font-semibold text-gray-800 dark:text-white">${record.StudentName || record.StudentID}</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">${record.Class} - ${record.Subject}</div>
                     </div>
                     <div class="text-right">
-                        ${Utils.getStatusBadge(record.Status)}
-                        <p class="text-xs text-gray-500 mt-1">${Utils.formatTime(record.Timestamp)}</p>
+                        <span class="px-3 py-1 rounded-full text-sm font-bold ${record.Status === 'PRESENT' ? 'bg-green-100 text-green-800' : record.Status === 'LATE' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}">
+                            ${record.Status === 'PRESENT' ? 'มา' : record.Status === 'LATE' ? 'สาย' : 'ขาด'}
+                        </span>
+                        <div class="text-xs text-gray-500 mt-1">${record.Date}</div>
                     </div>
                 </div>
             `).join('');
         }
 
-        async function loadStudents() {
-            const result = await API.getStudents();
-
-            if (result.success) {
-                renderStudentsTable(result.data);
-            }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('darkModeIcon').textContent = isDark ? '☀️' : '🌙';
+            document.getElementById('darkModeText').textContent = isDark ? 'โหมดกลางวัน' : 'โหมดกลางคืน';
+            localStorage.setItem('darkMode', isDark);
         }
-
-        function renderStudentsTable(students) {
-            const tbody = document.getElementById('studentsTableBody');
-
-            if (students.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8">ไม่พบนักเรียน</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = students.filter(s => s.Status !== 'DELETED').map(student => `
-                <tr>
-                    <td class="font-mono">${student.StudentID}</td>
-                    <td class="font-mono">${student.StudentCode || '-'}</td>
-                    <td class="font-semibold">${student.Name}</td>
-                    <td>${student.Class}</td>
-                    <td>${student.ImageUrl ? '✅ มี' : '❌ ไม่มี'}</td>
-                    <td><span class="badge badge-success">${student.Status}</span></td>
-                    <td>
-                        <button onclick="editStudent('${student.StudentID}')" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm mr-1">แก้ไข</button>
-                        <button onclick="deleteStudent('${student.StudentID}')" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm">ลบ</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        async function loadTeachers() {
-            const result = await API.getTeachers();
-
-            if (result.success) {
-                renderTeachersTable(result.data);
-            }
-        }
-
-        function renderTeachersTable(teachers) {
-            const tbody = document.getElementById('teachersTableBody');
-
-            if (teachers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8">ไม่พบครู</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = teachers.map(teacher => `
-                <tr>
-                    <td class="font-mono">${teacher.TeacherID}</td>
-                    <td class="font-semibold">${teacher.Name}</td>
-                    <td>${teacher.Email || '-'}</td>
-                    <td>${teacher.Phone || '-'}</td>
-                    <td>${teacher.Subjects || '-'}</td>
-                    <td>
-                        <button onclick="editTeacher('${teacher.TeacherID}')" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm">แก้ไข</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        async function loadClasses() {
-            const result = await API.getClasses();
-
-            if (result.success) {
-                renderClassesGrid(result.data);
-            }
-        }
-
-        function renderClassesGrid(classes) {
-            const grid = document.getElementById('classesGrid');
-
-            if (classes.length === 0) {
-                grid.innerHTML = '<p class="col-span-full text-gray-500 text-center py-8">ไม่พบห้องเรียน</p>';
-                return;
-            }
-
-            grid.innerHTML = classes.map(cls => `
-                <div class="card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                    <h3 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-2">${cls.ClassName}</h3>
-                    <p class="text-gray-600 dark:text-gray-400 mb-1">ครูประจำชั้น: ${cls.HomeRoomTeacher || '-'}</p>
-                    <p class="text-sm text-gray-500">ปีการศึกษา ${cls.AcademicYear}</p>
-                </div>
-            `).join('');
-        }
-
-        async function loadSubjects() {
-            const result = await API.getSubjects();
-
-            if (result.success) {
-                renderSubjectsTable(result.data);
-            }
-        }
-
-        function renderSubjectsTable(subjects) {
-            const tbody = document.getElementById('subjectsTableBody');
-
-            if (subjects.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8">ไม่พบรายวิชา</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = subjects.map(subject => `
-                <tr>
-                    <td class="font-mono">${subject.SubjectCode || '-'}</td>
-                    <td class="font-semibold">${subject.SubjectName}</td>
-                    <td>${subject.Grade || '-'}</td>
-                    <td><span class="badge badge-success">${subject.Status || 'ACTIVE'}</span></td>
-                </tr>
-            `).join('');
-        }
-
-        function showTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active', 'border-blue-500', 'text-blue-600');
-                btn.classList.add('text-gray-600', 'dark:text-gray-400');
-            });
-
-            // Show selected tab
-            document.getElementById(tabName + 'Tab').classList.remove('hidden');
-            event.target.classList.add('active', 'border-blue-500', 'text-blue-600');
-            event.target.classList.remove('text-gray-600', 'dark:text-gray-400');
-        }
-
-        function showAddStudentModal() {
-            Utils.showNotification('เพื่อเพิ่มนักเรียน กรุณาเพิ่มข้อมูลใน Google Sheets (Students sheet) หรือใช้ InitializeDatabase.gs', 'info');
-        }
-
-        function importStudents() {
-            Utils.showNotification('การนำเข้าจาก CSV: กรุณาเพิ่มข้อมูลลงใน Google Sheets โดยตรง', 'info');
-        }
-
-        function editStudent(studentId) {
-            alert('Edit Student: ' + studentId);
-        }
-
-        async function deleteStudent(studentId) {
-            if (!confirm('ยืนยันการลบนักเรียน?')) return;
-
-            const result = await API.deleteStudent(studentId, currentAdmin.userId);
-            if (result.success) {
-                Utils.showNotification('ลบสำเร็จ', 'success');
-                await loadStudents();
-            } else {
-                Utils.showNotification('เกิดข้อผิดพลาด', 'error');
-            }
-        }
-
-        function showAddTeacherModal() {
-            Utils.showNotification('เพื่อเพิ่มครู กรุณาเพิ่มข้อมูลใน Google Sheets (Teachers sheet)', 'info');
-        }
-
-        function editTeacher(teacherId) {
-            alert('Edit Teacher: ' + teacherId);
-        }
-
-        function showAddClassModal() {
-            Utils.showNotification('เพื่อเพิ่มห้องเรียน กรุณาเพิ่มข้อมูลใน Google Sheets (Classes sheet)', 'info');
-        }
-
-        async function generateReport(type) {
-            Utils.showLoader();
-
-            try {
-                let message = '';
-                switch (type) {
-                    case 'attendance':
-                        const attendance = await API.getAttendance();
-                        message = `พบข้อมูลการเข้าเรียน ${attendance.data ? attendance.data.length : 0} รายการ`;
-                        break;
-                    case 'students':
-                        const students = await API.getStudents();
-                        message = `พบนักเรียนทั้งหมด ${students.data ? students.data.length : 0} คน`;
-                        break;
-                    case 'performance':
-                        message = 'รายงานประสิทธิภาพ: ดูข้อมูลใน Google Sheets';
-                        break;
-                    case 'export':
-                        message = 'ส่งออกข้อมูล: เปิด Google Sheets > File > Download > CSV';
-                        break;
-                }
-                Utils.showNotification(message, 'success');
-            } catch (error) {
-                Utils.showNotification('เกิดข้อผิดพลาด', 'error');
-            }
-
-            Utils.hideLoader();
-        }
-
-        function logout() {
-            Session.clear();
-            window.location.href = 'index.html';
-        }
-
         function setupDarkMode() {
-            const toggle = document.getElementById('darkModeToggle');
             if (localStorage.getItem('darkMode') === 'true') {
                 document.documentElement.classList.add('dark');
-                toggle.querySelector('span').textContent = '☀️';
+                document.getElementById('darkModeIcon').textContent = '☀️';
+                document.getElementById('darkModeText').textContent = 'โหมดกลางวัน';
             }
-            toggle.addEventListener('click', function () {
-                document.documentElement.classList.toggle('dark');
-                const isDark = document.documentElement.classList.contains('dark');
-                toggle.querySelector('span').textContent = isDark ? '☀️' : '🌙';
-                localStorage.setItem('darkMode', isDark);
-            });
         }
+        function logout() { Session.clear(); window.location.href = 'index.html'; }
     </script>
 </body>
 

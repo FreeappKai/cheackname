@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการครู - Smart Attendance</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .sidebar {
+            width: 280px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            z-index: 50;
+            transition: transform 0.3s ease;
+        }
+
+        .dark .sidebar {
+            background: #1f2937;
+            border-right-color: #374151;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+        }
+
+        .sidebar-item:hover {
+            background: #f3f4f6;
+            color: #3b82f6;
+        }
+
+        .sidebar-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            border-left-color: #3b82f6;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: #f9fafb;
+        }
+
+        .dark .main-content {
+            background: #111827;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .dark .modal-content {
+            background: #1f2937;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900">
+    <aside class="sidebar" id="sidebar">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-lg font-bold font-kanit">Admin Panel</h2>
+        </div>
+        <nav class="py-4">
+            <a href="admin-dashboard.html" class="sidebar-item"><span>📊</span><span
+                    class="font-kanit">Dashboard</span></a>
+            <a href="admin-academic-year.html" class="sidebar-item"><span>📅</span><span
+                    class="font-kanit">ปีการศึกษา</span></a>
+            <a href="admin-students.html" class="sidebar-item"><span>👥</span><span
+                    class="font-kanit">นักเรียน</span></a>
+            <a href="admin-teachers.html" class="sidebar-item active"><span>👨‍🏫</span><span
+                    class="font-kanit">ครู</span></a>
+            <a href="admin-users.html" class="sidebar-item"><span>🔐</span><span class="font-kanit">ผู้ใช้ &
+                    สิทธิ์</span></a>
+            <a href="admin-classes.html" class="sidebar-item"><span>🏫</span><span
+                    class="font-kanit">ชั้นเรียน</span></a>
+            <a href="admin-subjects.html" class="sidebar-item"><span>📚</span><span
+                    class="font-kanit">รายวิชา</span></a>
+            <a href="admin-timetable.html" class="sidebar-item"><span>🗓️</span><span
+                    class="font-kanit">ตารางเรียน</span></a>
+            <a href="admin-attendance.html" class="sidebar-item"><span>📊</span><span
+                    class="font-kanit">ข้อมูลการเข้าเรียน</span></a>
+            <a href="admin-warnings.html" class="sidebar-item"><span>⚠️</span><span
+                    class="font-kanit">แจ้งเตือน</span></a>
+            <a href="admin-reports.html" class="sidebar-item"><span>📄</span><span class="font-kanit">รายงาน</span></a>
+            <a href="admin-logs.html" class="sidebar-item"><span>📜</span><span class="font-kanit">Logs</span></a>
+            <a href="admin-settings.html" class="sidebar-item"><span>⚙️</span><span
+                    class="font-kanit">ตั้งค่า</span></a>
+            <a href="admin-backup.html" class="sidebar-item"><span>💾</span><span class="font-kanit">สำรอง</span></a>
+        </nav>
+        <div class="p-4 border-t mt-auto">
+            <button onclick="toggleDarkMode()"
+                class="w-full px-4 py-2 mb-2 bg-gray-100 dark:bg-gray-700 rounded-lg"><span id="darkModeIcon">🌙</span>
+                <span id="darkModeText">โหมดกลางคืน</span></button>
+            <button onclick="logout()" class="w-full px-4 py-2 bg-red-500 text-white rounded-lg">🚪 ออกจากระบบ</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold font-kanit text-gray-800 dark:text-white">👨‍🏫 จัดการครู</h1>
+                <button onclick="showAddModal()" class="px-6 py-3 bg-blue-500 text-white rounded-lg font-kanit">➕
+                    เพิ่มครู</button>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6">
+                <input type="text" id="searchTeacher" placeholder="ค้นหารหัส/ชื่อครู..."
+                    class="w-full px-4 py-2 rounded-lg border" oninput="filterTeachers()">
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="text-left py-4 px-6 font-kanit">รหัสครู</th>
+                            <th class="text-left py-4 px-6 font-kanit">ชื่อ-นามสกุล</th>
+                            <th class="text-left py-4 px-6 font-kanit">แผนก</th>
+                            <th class="text-center py-4 px-6 font-kanit">วิชาที่สอน</th>
+                            <th class="text-center py-4 px-6 font-kanit">สถานะ</th>
+                            <th class="text-center py-4 px-6 font-kanit">การดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teachersTable">
+                        <tr>
+                            <td colspan="6" class="text-center py-8 text-gray-500">กำลังโหลด...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="modal" id="teacherModal">
+            <div class="modal-content">
+                <h2 class="text-2xl font-bold font-kanit mb-6">เพิ่ม/แก้ไขครู</h2>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">รหัสครู *</label>
+                        <input type="text" id="inputTeacherID" class="w-full px-4 py-2 rounded-lg border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">ชื่อ-นามสกุล *</label>
+                        <input type="text" id="inputName" class="w-full px-4 py-2 rounded-lg border">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">อีเมล</label>
+                        <input type="email" id="inputEmail" class="w-full px-4 py-2 rounded-lg border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">เบอร์โทร</label>
+                        <input type="text" id="inputPhone" class="w-full px-4 py-2 rounded-lg border">
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2">แผนก/กลุ่มสาระ</label>
+                    <input type="text" id="inputDepartment" class="w-full px-4 py-2 rounded-lg border">
+                </div>
+
+                <div class="flex gap-4">
+                    <button onclick="saveTeacher()"
+                        class="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg font-kanit">✅ บันทึก</button>
+                    <button onclick="closeModal('teacherModal')"
+                        class="px-6 py-3 bg-gray-500 text-white rounded-lg font-kanit">❌ ยกเลิก</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        let allTeachers = [];
+        let filteredTeachers = [];
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            if (!Session.requireAuth(['ADMIN'])) return;
+            await loadTeachers();
+            setupDarkMode();
+        });
+
+        async function loadTeachers() {
+            Utils.showLoader();
+            try {
+                const result = await API.getTeachers();
+                if (result.success) {
+                    allTeachers = result.data;
+                    filteredTeachers = allTeachers;
+                    renderTeachers();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        function filterTeachers() {
+            const search = document.getElementById('searchTeacher').value.toLowerCase();
+            filteredTeachers = allTeachers.filter(t =>
+                t.TeacherID.toLowerCase().includes(search) ||
+                t.Name.toLowerCase().includes(search)
+            );
+            renderTeachers();
+        }
+
+        function renderTeachers() {
+            const tbody = document.getElementById('teachersTable');
+            if (filteredTeachers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">ไม่พบครู</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filteredTeachers.map(t => `
+                <tr class="border-b">
+                    <td class="py-4 px-6 font-mono font-bold">${t.TeacherID}</td>
+                    <td class="py-4 px-6">${t.Name}</td>
+                    <td class="py-4 px-6">${t.Department || '-'}</td>
+                    <td class="text-center py-4 px-6">${t.SubjectsCount || 0} วิชา</td>
+                    <td class="text-center py-4 px-6">
+                        <span class="px-3 py-1 rounded-full text-sm ${t.IsActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}">
+                            ${t.IsActive ? '✅ ใช้งาน' : '❌ ปิด'}
+                        </span>
+                    </td>
+                    <td class="text-center py-4 px-6">
+                        <div class="flex gap-2 justify-center">
+                            <button onclick='editTeacher(${JSON.stringify(t)})' class="px-3 py-1 bg-blue-500 text-white rounded text-sm">แก้ไข</button>
+                            <button onclick="resetPassword('${t.TeacherID}')" class="px-3 py-1 bg-yellow-500 text-white rounded text-sm">รีเซ็ตPW</button>
+                            <button onclick="toggleTeacher('${t.TeacherID}', ${!t.IsActive})" class="px-3 py-1 bg-${t.IsActive ? 'red' : 'green'}-500 text-white rounded text-sm">
+                                ${t.IsActive ? 'ปิด' : 'เปิด'}
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showAddModal() {
+            document.getElementById('inputTeacherID').value = '';
+            document.getElementById('inputName').value = '';
+            document.getElementById('teacherModal').classList.add('show');
+        }
+
+        function editTeacher(teacher) {
+            document.getElementById('inputTeacherID').value = teacher.TeacherID;
+            document.getElementById('inputName').value = teacher.Name;
+            document.getElementById('inputEmail').value = teacher.Email || '';
+            document.getElementById('inputPhone').value = teacher.Phone || '';
+            document.getElementById('inputDepartment').value = teacher.Department || '';
+            document.getElementById('teacherModal').classList.add('show');
+        }
+
+        async function saveTeacher() {
+            const teacherID = document.getElementById('inputTeacherID').value;
+            const name = document.getElementById('inputName').value;
+
+            if (!teacherID || !name) {
+                Utils.showNotification('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+                return;
+            }
+
+            Utils.showLoader();
+            try {
+                const result = await API.saveTeacher({ teacherID, name });
+                if (result.success) {
+                    Utils.showNotification('บันทึกสำเร็จ', 'success');
+                    closeModal('teacherModal');
+                    await loadTeachers();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        async function resetPassword(teacherID) {
+            if (!confirm(`ต้องการรีเซ็ตรหัสผ่านของ ${teacherID} หรือไม่?`)) return;
+
+            Utils.showLoader();
+            try {
+                const result = await API.resetPassword(teacherID);
+                if (result.success) {
+                    Utils.showNotification('รีเซ็ตรหัสผ่านสำเร็จ', 'success');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        async function toggleTeacher(teacherID, newStatus) {
+            Utils.showLoader();
+            try {
+                const result = await API.toggleTeacher(teacherID, newStatus);
+                if (result.success) {
+                    Utils.showNotification('เปลี่ยนสถานะสำเร็จ', 'success');
+                    await loadTeachers();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('darkModeIcon').textContent = isDark ? '☀️' : '🌙';
+            document.getElementById('darkModeText').textContent = isDark ? 'โหมดกลางวัน' : 'โหมดกลางคืน';
+            localStorage.setItem('darkMode', isDark);
+        }
+        function setupDarkMode() {
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+                document.getElementById('darkModeIcon').textContent = '☀️';
+                document.getElementById('darkModeText').textContent = 'โหมดกลางวัน';
+            }
+        }
+        function logout() { Session.clear(); window.location.href = 'index.html'; }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - Smart Attendance System</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Custom Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            transition: transform 0.3s ease;
+            z-index: 50;
+            overflow-y: auto;
+        }
+
+        .dark .sidebar {
+            background: #1f2937;
+            border-right-color: #374151;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            font-family: 'Kanit', sans-serif;
+            font-weight: 500;
+        }
+
+        .sidebar-item:hover {
+            background: #f3f4f6;
+            color: #3b82f6;
+        }
+
+        .dark .sidebar-item:hover {
+            background: #374151;
+            color: #60a5fa;
+        }
+
+        .sidebar-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            border-left-color: #3b82f6;
+        }
+
+        .dark .sidebar-item.active {
+            background: #1e3a5f;
+            color: #60a5fa;
+            border-left-color: #60a5fa;
+        }
+
+        .sidebar-icon {
+            font-size: 24px;
+            width: 28px;
+            text-align: center;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            transition: margin-left 0.3s ease;
+            min-height: 100vh;
+            background: #f9fafb;
+        }
+
+        .dark .main-content {
+            background: #111827;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show-mobile {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        /* Status Colors */
+        .status-present {
+            background: #22c55e;
+            color: white;
+        }
+
+        .status-late {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .status-absent {
+            background: #ef4444;
+            color: white;
+        }
+
+        .status-leave {
+            background: #3b82f6;
+            color: white;
+        }
+
+        /* Risk Badges */
+        .risk-high {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+
+        .risk-watch {
+            background: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fcd34d;
+        }
+
+        .risk-normal {
+            background: #d1fae5;
+            color: #059669;
+            border: 1px solid #6ee7b7;
+        }
+
+        /* Timetable Grid */
+        .timetable-grid {
+            display: grid;
+            grid-template-columns: 80px repeat(5, 1fr);
+            gap: 2px;
+            background: #e5e7eb;
+        }
+
+        .timetable-cell {
+            background: white;
+            padding: 12px;
+            min-height: 80px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dark .timetable-cell {
+            background: #1f2937;
+        }
+
+        .timetable-cell:hover {
+            background: #eff6ff;
+            transform: scale(1.02);
+        }
+
+        .dark .timetable-cell:hover {
+            background: #1e3a5f;
+        }
+
+        .timetable-cell.current {
+            background: #dbeafe;
+            border: 2px solid #3b82f6;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        /* Quick Stats Cards */
+        .quick-stat {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .quick-stat.green {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        }
+
+        .quick-stat.yellow {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .quick-stat.red {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .quick-stat.blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .dark .modal-content {
+            background: #1f2937;
+        }
+
+        /* Student Card */
+        .student-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .dark .student-card {
+            background: #1f2937;
+            border-color: #374151;
+        }
+
+        .student-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Alert Badge */
+        .alert-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 font-sans">
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <!-- Logo & Teacher Info -->
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-3 mb-3">
+                <img src="https://img5.pic.in.th/file/secure-sv1/-668e94e3b2fda05e3.png" alt="Logo" class="h-12">
+                <div>
+                    <h2 class="text-lg font-bold font-kanit text-gray-800 dark:text-white">ระบบครู</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400" id="sidebarTeacherName">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="py-4">
+            <div class="sidebar-item active" onclick="showSection('dashboard')">
+                <span class="sidebar-icon">📊</span>
+                <span>Dashboard</span>
+            </div>
+
+            <div class="sidebar-item" onclick="showSection('attendance')">
+                <span class="sidebar-icon">📝</span>
+                <span>เช็คชื่อ</span>
+            </div>
+
+            <div class="sidebar-item" onclick="showSection('timetable')">
+                <span class="sidebar-icon">📅</span>
+                <span>ตารางสอนของฉัน</span>
+            </div>
+
+            <div class="sidebar-item" onclick="showSection('summary')">
+                <span class="sidebar-icon">📈</span>
+                <span>สรุปการเข้าเรียน</span>
+            </div>
+
+            <div class="sidebar-item" onclick="showSection('students')">
+                <span class="sidebar-icon">👥</span>
+                <span>นักเรียนของฉัน</span>
+            </div>
+
+            <div class="sidebar-item" onclick="showSection('warning')">
+                <span class="sidebar-icon">⚠️</span>
+                <span>แจ้งเตือนเสี่ยง</span>
+                <span class="alert-badge" id="warningBadge" style="display: none;">0</span>
+            </div>
+
+            <div class="sidebar-item" onclick="showSection('adjustment')">
+                <span class="sidebar-icon">🔧</span>
+                <span>แก้ไขการเช็คชื่อ</span>
+            </div>
+
+            <div class="sidebar-item" onclick="showSection('reports')">
+                <span class="sidebar-icon">📄</span>
+                <span>รายงาน & Export</span>
+            </div>
+
+            <div class="sidebar-item" onclick="showSection('profile')">
+                <span class="sidebar-icon">👤</span>
+                <span>โปรไฟล์ครู</span>
+            </div>
+        </nav>
+
+        <!-- Settings & Logout -->
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700 mt-auto">
+            <button onclick="toggleDarkMode()"
+                class="w-full px-4 py-2 mb-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-kanit text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <span id="darkModeIcon">🌙</span> <span id="darkModeText">โหมดกลางคืน</span>
+            </button>
+            <button onclick="logout()"
+                class="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-kanit text-sm transition-colors">
+                🚪 ออกจากระบบ
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="mainContent">
+        <!-- Mobile Menu Toggle -->
+        <button class="md:hidden fixed top-4 left-4 z-40 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
+            onclick="toggleSidebar()">
+            <span class="text-2xl">☰</span>
+        </button>
+
+        <!-- Dashboard Section -->
+        <section id="dashboardSection" class="section-content">
+            <div class="p-6">
+                <!-- Header -->
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold font-kanit text-gray-800 dark:text-white mb-2">Dashboard ครู</h1>
+                    <p class="text-gray-600 dark:text-gray-400">ยินดีต้อนรับกลับมา <span id="teacherNameDisplay"></span>
+                    </p>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="quick-stat blue">
+                        <div class="text-4xl font-bold mb-2" id="stat_classesToday">0</div>
+                        <div class="text-sm opacity-90">คาบเรียนวันนี้</div>
+                    </div>
+                    <div class="quick-stat green">
+                        <div class="text-4xl font-bold mb-2" id="stat_studentsPresent">0</div>
+                        <div class="text-sm opacity-90">นักเรียนมาเรียน</div>
+                    </div>
+                    <div class="quick-stat yellow">
+                        <div class="text-4xl font-bold mb-2" id="stat_pendingChecks">0</div>
+                        <div class="text-sm opacity-90">ยังไม่ได้เช็คชื่อ</div>
+                    </div>
+                    <div class="quick-stat red">
+                        <div class="text-4xl font-bold mb-2" id="stat_atRiskStudents">0</div>
+                        <div class="text-sm opacity-90">นักเรียนเสี่ยง</div>
+                    </div>
+                </div>
+
+                <!-- Today's Schedule & Alerts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- Schedule Card -->
+                    <div class="card bg-white dark:bg-gray-800 p-6">
+                        <h2 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-4">📅 คาบเรียนวันนี้
+                        </h2>
+                        <div id="todayScheduleList" class="space-y-3">
+                            <!-- Dynamic content -->
+                        </div>
+                    </div>
+
+                    <!-- Alerts Card -->
+                    <div class="card bg-white dark:bg-gray-800 p-6">
+                        <h2 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-4">🔔 แจ้งเตือน</h2>
+                        <div id="alertsList" class="space-y-3">
+                            <!-- Dynamic content -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card bg-white dark:bg-gray-800 p-6">
+                    <h2 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-4">⚡ การดำเนินการด่วน</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <button onclick="quickStartAttendance()"
+                            class="p-6 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-lg hover:shadow-xl transition-all transform hover:scale-105">
+                            <div class="text-4xl mb-2">▶️</div>
+                            <div class="font-bold font-kanit">เริ่มเช็คชื่อทันที</div>
+                            <div class="text-sm opacity-80">คาบถัดไป</div>
+                        </button>
+                        <button onclick="showSection('summary')"
+                            class="p-6 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-lg hover:shadow-xl transition-all transform hover:scale-105">
+                            <div class="text-4xl mb-2">📊</div>
+                            <div class="font-bold font-kanit">ดูสรุปวิชา</div>
+                            <div class="text-sm opacity-80">สถิติวันนี้</div>
+                        </button>
+                        <button onclick="showSection('timetable')"
+                            class="p-6 bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-lg hover:shadow-xl transition-all transform hover:scale-105">
+                            <div class="text-4xl mb-2">📅</div>
+                            <div class="font-bold font-kanit">ดูตารางสอน</div>
+                            <div class="text-sm opacity-80">ตารางเต็ม</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Take Attendance Section -->
+        <section id="attendanceSection" class="section-content hidden">
+            <div class="p-6">
+                <h1 class="text-3xl font-bold font-kanit text-gray-800 dark:text-white mb-6">📝 เช็คชื่อ</h1>
+
+                <!-- Selection Panel -->
+                <div class="card bg-white dark:bg-gray-800 p-6 mb-6">
+                    <h2 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-4">เลือกคาบเรียน</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">วิชา</label>
+                            <select id="attendanceSubject"
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                <option value="">เลือกวิชา</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">ห้อง</label>
+                            <select id="attendanceClass"
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                <option value="">เลือกห้อง</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">คาบ</label>
+                            <select id="attendancePeriod"
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                <option value="">เลือกคาบ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="loadAttendanceStudents()"
+                        class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-kanit transition-colors">
+                        โหลดรายชื่อนักเรียน
+                    </button>
+                </div>
+
+                <!-- Attendance Method Tabs -->
+                <div class="card bg-white dark:bg-gray-800 p-6 mb-6">
+                    <div class="flex gap-2 mb-6">
+                        <button id="tabFaceRecognition" onclick="switchAttendanceMethod('face')"
+                            class="px-6 py-3 bg-blue-500 text-white rounded-lg font-kanit">
+                            📸 Face Recognition
+                        </button>
+                        <button id="tabManual" onclick="switchAttendanceMethod('manual')"
+                            class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg font-kanit">
+                            ✍️ Manual Entry
+                        </button>
+                    </div>
+
+                    <!-- Face Recognition Panel -->
+                    <div id="faceRecognitionPanel">
+                        <div class="text-center py-8">
+                            <button onclick="startFaceRecognition()"
+                                class="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-kanit text-lg hover:shadow-xl transition-all">
+                                📸 เปิดกล้องเช็คชื่อ
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Manual Entry Panel -->
+                    <div id="manualEntryPanel" class="hidden">
+                        <!-- Progress Bar -->
+                        <div class="mb-6">
+                            <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                <span>ความคืบหน้า</span>
+                                <span id="attendanceProgress">0 / 0</span>
+                            </div>
+                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
+                                <div id="attendanceProgressBar" class="bg-blue-500 h-4 rounded-full transition-all"
+                                    style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Student List -->
+                        <div class="space-y-3" id="attendanceStudentList">
+                            <!-- Dynamic student list will be inserted here -->
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex gap-4 mt-6">
+                            <button onclick="saveAttendance()"
+                                class="flex-1 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-kanit transition-colors">
+                                💾 บันทึก
+                            </button>
+                            <button onclick="submitAttendance()"
+                                class="flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-kanit transition-colors">
+                                ✅ ส่งการเช็คชื่อ
+                            </button>
+                            <button onclick="cancelAttendance()"
+                                class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-kanit transition-colors">
+                                ❌ ยกเลิก
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- My Timetable Section -->
+        <section id="timetableSection" class="section-content hidden">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-bold font-kanit text-gray-800 dark:text-white">📅 ตารางสอนของฉัน</h1>
+                    <div class="flex gap-2">
+                        <button id="btnDailyView" onclick="switchTimetableView('daily')"
+                            class="px-4 py-2 bg-blue-500 text-white rounded-lg font-kanit">รายวัน</button>
+                        <button id="btnWeeklyView" onclick="switchTimetableView('weekly')"
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-kanit">รายสัปดาห์</button>
+                    </div>
+                </div>
+
+                <!-- Daily View -->
+                <div id="dailyTimetableView" class="card bg-white dark:bg-gray-800 p-6">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">เลือกวัน</label>
+                        <select id="timetableDaySelector" onchange="loadDailyTimetable()"
+                            class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                            <option value="1">จันทร์</option>
+                            <option value="2">อังคาร</option>
+                            <option value="3">พุธ</option>
+                            <option value="4">พฤหัสบดี</option>
+                            <option value="5">ศุกร์</option>
+                        </select>
+                    </div>
+                    <div id="dailyTimetableContent" class="space-y-3">
+                        <!-- Dynamic daily timetable -->
+                    </div>
+                </div>
+
+                <!-- Weekly View -->
+                <div id="weeklyTimetableView" class="hidden">
+                    <div class="overflow-x-auto">
+                        <div class="timetable-grid min-w-max">
+                            <!-- Header Row -->
+                            <div class="timetable-cell font-bold bg-gray-100 dark:bg-gray-800">คาบ</div>
+                            <div class="timetable-cell font-bold bg-gray-100 dark:bg-gray-800">จันทร์</div>
+                            <div class="timetable-cell font-bold bg-gray-100 dark:bg-gray-800">อังคาร</div>
+                            <div class="timetable-cell font-bold bg-gray-100 dark:bg-gray-800">พุธ</div>
+                            <div class="timetable-cell font-bold bg-gray-100 dark:bg-gray-800">พฤหัสบดี</div>
+                            <div class="timetable-cell font-bold bg-gray-100 dark:bg-gray-800">ศุกร์</div>
+
+                            <!-- Timetable content will be inserted here dynamically -->
+                            <div id="weeklyTimetableContent"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Attendance Summary Section -->
+        <section id="summarySection" class="section-content hidden">
+            <div class="p-6">
+                <h1 class="text-3xl font-bold font-kanit text-gray-800 dark:text-white mb-6">📈 สรุปการเข้าเรียน</h1>
+
+                <!-- Filters -->
+                <div class="card bg-white dark:bg-gray-800 p-6 mb-6">
+                    <h2 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-4">ตัวกรอง</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">วิชา</label>
+                            <select id="summarySubject"
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                <option value="">ทุกวิชา</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">ห้อง</label>
+                            <select id="summaryClass"
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                <option value="">ทุกห้อง</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">วันที่เริ่มต้น</label>
+                            <input type="date" id="summaryStartDate"
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        </div>
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">วันที่สิ้นสุด</label>
+                            <input type="date" id="summaryEndDate"
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        </div>
+                    </div>
+                    <button onclick="loadSummaryData()"
+                        class="mt-4 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-kanit transition-colors">
+                        🔍 ค้นหา
+                    </button>
+                </div>
+
+                <!-- Overall Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div class="card bg-white dark:bg-gray-800 p-6 text-center">
+                        <div class="text-4xl font-bold text-blue-500 mb-2" id="summaryAttendanceRate">0%</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">อัตราการมาเรียน</div>
+                    </div>
+                    <div class="card bg-white dark:bg-gray-800 p-6 text-center">
+                        <div class="text-4xl font-bold text-green-500 mb-2" id="summaryPresentCount">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">มาเรียน</div>
+                    </div>
+                    <div class="card bg-white dark:bg-gray-800 p-6 text-center">
+                        <div class="text-4xl font-bold text-yellow-500 mb-2" id="summaryLateCount">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">มาสาย</div>
+                    </div>
+                    <div class="card bg-white dark:bg-gray-800 p-6 text-center">
+                        <div class="text-4xl font-bold text-red-500 mb-2" id="summaryAbsentCount">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">ขาดเรียน</div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="card bg-white dark:bg-gray-800 p-6">
+                        <h3 class="text-lg font-bold font-kanit text-gray-800 dark:text-white mb-4">แผนภูมิวงกลม</h3>
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                    <div class="card bg-white dark:bg-gray-800 p-6">
+                        <h3 class="text-lg font-bold font-kanit text-gray-800 dark:text-white mb-4">แนวโน้มการมาเรียน
+                        </h3>
+                        <canvas id="lineChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Detailed Records Table -->
+                <div class="card bg-white dark:bg-gray-800 p-6">
+                    <h3 class="text-lg font-bold font-kanit text-gray-800 dark:text-white mb-4">รายละเอียดการเข้าเรียน
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200 dark:border-gray-700">
+                                    <th class="text-left py-3 px-4">วันที่</th>
+                                    <th class="text-left py-3 px-4">ห้อง</th>
+                                    <th class="text-left py-3 px-4">วิชา</th>
+                                    <th class="text-center py-3 px-4">มา</th>
+                                    <th class="text-center py-3 px-4">สาย</th>
+                                    <th class="text-center py-3 px-4">ขาด</th>
+                                    <th class="text-center py-3 px-4">อัตรา</th>
+                                </tr>
+                            </thead>
+                            <tbody id="summaryTableBody">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- My Students Section - CONTINUES IN NEXT MESSAGE -->
+
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        // Global variables
+        let currentTeacher = null;
+        let currentAttendanceData = {};
+        let pieChartInstance = null;
+        let lineChartInstance = null;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Check authentication
+            if (!Session.requireAuth(['TEACHER'])) return;
+
+            currentTeacher = Session.get();
+
+            // Update teacher name displays
+            document.getElementById('sidebarTeacherName').textContent = `ครู ${currentTeacher.username}`;
+            document.getElementById('teacherNameDisplay').textContent = `ครู ${currentTeacher.username}`;
+
+            // Load dashboard
+            await loadDashboard();
+
+            // Setup dark mode
+            setupDarkMode();
+
+            // Set default dates for summary
+            setDefaultSummaryDates();
+        });
+
+        // Dashboard Loading
+        async function loadDashboard() {
+            Utils.showLoader();
+
+            try {
+                const result = await API.getTeacherDashboard(currentTeacher.linkedId || currentTeacher.userId);
+
+                if (result.success) {
+                    renderQuickStats(result.data);
+                    renderTodaySchedule(result.data.todaySchedule || []);
+                    renderAlerts(result.data);
+                }
+            } catch (error) {
+                console.error('Dashboard error:', error);
+                Utils.showNotification('เกิดข้อผิดพลาดในการโหลดข้อมูล', 'error');
+            }
+
+            Utils.hideLoader();
+        }
+
+        function renderQuickStats(data) {
+            document.getElementById('stat_classesToday').textContent = (data.todaySchedule || []).length;
+            document.getElementById('stat_studentsPresent').textContent = (data.todayAttendance || []).filter(a => a.Status === 'PRESENT').length;
+            document.getElementById('stat_pendingChecks').textContent = data.pendingChecks || 0;
+            document.getElementById('stat_atRiskStudents').textContent = data.atRiskStudents || 0;
+
+            // Update warning badge
+            if (data.atRiskStudents > 0) {
+                document.getElementById('warningBadge').textContent = data.atRiskStudents;
+                document.getElementById('warningBadge').style.display = 'flex';
+            }
+        }
+
+        function renderTodaySchedule(schedule) {
+            const container = document.getElementById('todayScheduleList');
+
+            if (schedule.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">ไม่มีคาบเรียนวันนี้</p>';
+                return;
+            }
+
+            container.innerHTML = schedule.map((entry, index) => `
+                <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg flex items-center justify-between hover:bg-blue-50 dark:hover:bg-blue-900 cursor-pointer transition-all" onclick="startAttendanceFromSchedule('${entry.SubjectID}', '${entry.ClassID}', '${entry.Period}')">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="px-2 py-1 bg-blue-500 text-white text-xs rounded font-bold">คาบ ${entry.Period}</span>
+                            <span class="font-bold text-gray-800 dark:text-white">${entry.SubjectID}</span>
+                        </div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                            ${entry.ClassID} • ${entry.StartTime || ''} - ${entry.EndTime || ''}
+                        </div>
+                    </div>
+                    <div class="text-2xl">▶️</div>
+                </div>
+            `).join('');
+        }
+
+        function renderAlerts(data) {
+            const container = document.getElementById('alertsList');
+            const alerts = [];
+
+            // Unchecked classes
+            if (data.pendingChecks > 0) {
+                alerts.push({
+                    icon: '🔴',
+                    title: `${data.pendingChecks} ห้องยังไม่ได้เช็คชื่อ`,
+                    desc: 'คลิกเพื่อดูรายละเอียด',
+                    action: () => showSection('attendance')
+                });
+            }
+
+            // At-risk students
+            if (data.atRiskStudents > 0) {
+                alerts.push({
+                    icon: '⚠️',
+                    title: `${data.atRiskStudents} นักเรียนเสี่ยงขาดเรียน`,
+                    desc: 'ต้องติดตามเร่งด่วน',
+                    action: () => showSection('warning')
+                });
+            }
+
+            if (alerts.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">ไม่มีการแจ้งเตือน</p>';
+                return;
+            }
+
+            container.innerHTML = alerts.map((alert, idx) => `
+                <div class="p-4 bg-yellow-50 dark:bg-yellow-900 border-l-4 border-yellow-500 rounded cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-800 transition-all" onclick="alerts[${idx}].action()">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">${alert.icon}</span>
+                        <div class="flex-1">
+                            <div class="font-bold text-gray-800 dark:text-white">${alert.title}</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">${alert.desc}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Store alerts for onclick
+            window.alerts = alerts;
+        }
+
+        // CONTINUES IN NEXT PART...

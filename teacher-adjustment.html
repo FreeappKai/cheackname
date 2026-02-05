@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แก้ไขการเช็คชื่อ - Smart Attendance</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .sidebar {
+            width: 280px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            z-index: 50;
+            transition: transform 0.3s ease;
+        }
+
+        .dark .sidebar {
+            background: #1f2937;
+            border-right-color: #374151;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+        }
+
+        .sidebar-item:hover {
+            background: #f3f4f6;
+            color: #3b82f6;
+        }
+
+        .dark .sidebar-item:hover {
+            background: #374151;
+        }
+
+        .sidebar-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            border-left-color: #3b82f6;
+        }
+
+        .dark .sidebar-item.active {
+            background: #1e3a5f;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: #f9fafb;
+        }
+
+        .dark .main-content {
+            background: #111827;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .dark .modal-content {
+            background: #1f2937;
+        }
+
+        .alert-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 font-sans">
+    <button class="md:hidden fixed top-4 left-4 z-50 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
+        onclick="toggleSidebar()"><span class="text-2xl">☰</span></button>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-3 mb-3">
+                <img src="https://img5.pic.in.th/file/secure-sv1/-668e94e3b2fda05e3.png" alt="Logo" class="h-12">
+                <div>
+                    <h2 class="text-lg font-bold font-kanit text-gray-800 dark:text-white">ระบบครู</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400" id="sidebarTeacherName">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="py-4">
+            <a href="teacher-dashboard.html" class="sidebar-item"><span class="text-2xl">📊</span><span
+                    class="font-kanit font-medium">Dashboard</span></a>
+            <a href="teacher-attendance.html" class="sidebar-item"><span class="text-2xl">📝</span><span
+                    class="font-kanit font-medium">เช็คชื่อ</span></a>
+            <a href="teacher-timetable.html" class="sidebar-item"><span class="text-2xl">📅</span><span
+                    class="font-kanit font-medium">ตารางสอน</span></a>
+            <a href="teacher-summary.html" class="sidebar-item"><span class="text-2xl">📈</span><span
+                    class="font-kanit font-medium">สรุปการเข้าเรียน</span></a>
+            <a href="teacher-students.html" class="sidebar-item"><span class="text-2xl">👥</span><span
+                    class="font-kanit font-medium">นักเรียนของฉัน</span></a>
+            <a href="teacher-warning.html" class="sidebar-item" style="position: relative;"><span
+                    class="text-2xl">⚠️</span><span class="font-kanit font-medium">แจ้งเตือนเสี่ยง</span><span
+                    class="alert-badge" id="warningBadge" style="display: none;">0</span></a>
+            <a href="teacher-adjustment.html" class="sidebar-item active"><span class="text-2xl">🔧</span><span
+                    class="font-kanit font-medium">แก้ไขการเช็คชื่อ</span></a>
+            <a href="teacher-reports.html" class="sidebar-item"><span class="text-2xl">📄</span><span
+                    class="font-kanit font-medium">รายงาน & Export</span></a>
+            <a href="teacher-profile.html" class="sidebar-item"><span class="text-2xl">👤</span><span
+                    class="font-kanit font-medium">โปรไฟล์ครู</span></a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700 mt-auto">
+            <button onclick="toggleDarkMode()"
+                class="w-full px-4 py-2 mb-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-kanit text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <span id="darkModeIcon">🌙</span> <span id="darkModeText">โหมดกลางคืน</span>
+            </button>
+            <button onclick="logout()"
+                class="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-kanit text-sm transition-colors">🚪
+                ออกจากระบบ</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="p-6">
+            <h1 class="text-3xl font-bold font-kanit text-gray-800 dark:text-white mb-6">🔧 แก้ไขการเช็คชื่อ</h1>
+
+            <!-- Search & Filter -->
+            <div class="card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+                <h2 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-4">ค้นหา & กรอง</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input type="date" id="filterDate"
+                        class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <select id="filterClass"
+                        class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option value="">ทุกห้อง</option>
+                    </select>
+                    <input type="text" id="filterStudent" placeholder="ชื่อนักเรียน..."
+                        class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <button onclick="searchRecords()"
+                        class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-kanit transition-colors">🔍
+                        ค้นหา</button>
+                </div>
+            </div>
+
+            <!-- Records Table -->
+            <div class="card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-4">บันทึกการเช็คชื่อ</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <th class="text-left py-3 px-4 font-kanit">วันที่</th>
+                                <th class="text-left py-3 px-4 font-kanit">นักเรียน</th>
+                                <th class="text-left py-3 px-4 font-kanit">ห้อง</th>
+                                <th class="text-left py-3 px-4 font-kanit">คาบ</th>
+                                <th class="text-center py-3 px-4 font-kanit">สถานะ</th>
+                                <th class="text-center py-3 px-4 font-kanit">การดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsTable">
+                            <tr>
+                                <td colspan="6" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                                    กรุณาเลือกวันที่และค้นหา</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Modal -->
+        <div class="modal" id="editModal">
+            <div class="modal-content">
+                <h2 class="text-2xl font-bold font-kanit text-gray-800 dark:text-white mb-6">แก้ไขการเช็คชื่อ</h2>
+
+                <div class="mb-4">
+                    <div class="text-gray-700 dark:text-gray-300 mb-2">นักเรียน: <span id="editStudentName"
+                            class="font-bold"></span></div>
+                    <div class="text-gray-700 dark:text-gray-300 mb-2">วันที่: <span id="editDate"
+                            class="font-bold"></span></div>
+                    <div class="text-gray-700 dark:text-gray-300 mb-2">สถานะเดิม: <span id="editOldStatus"
+                            class="font-bold"></span></div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">สถานะใหม่</label>
+                    <select id="editNewStatus"
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option value="PRESENT">มาเรียน</option>
+                        <option value="LATE">มาสาย</option>
+                        <option value="ABSENT">ขาดเรียน</option>
+                        <option value="LEAVE">ลา</option>
+                    </select>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">เหตุผลในการแก้ไข
+                        (required) <span class="text-red-500">*</span></label>
+                    <textarea id="editReason" rows="3"
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        placeholder="กรุณาระบุเหตุผล..."></textarea>
+                </div>
+
+                <div class="flex gap-4">
+                    <button onclick="saveEdit()"
+                        class="flex-1 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-kanit transition-colors">✅
+                        บันทึก</button>
+                    <button onclick="closeEditModal()"
+                        class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-kanit transition-colors">❌
+                        ยกเลิก</button>
+                </div>
+            </div>
+        </div>
+
+        <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
+            <div class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-600 dark:text-gray-400">
+                <p class="font-kanit">FREEMAN STUDIO BY KRUKAI</p>
+                <p class="text-sm mt-1">© 2026 Smart Attendance System</p>
+            </div>
+        </footer>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        let currentTeacher = null;
+        let currentEdit = null;
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            if (!Session.requireAuth(['TEACHER'])) return;
+
+            currentTeacher = Session.get();
+            document.getElementById('sidebarTeacherName').textContent = `ครู ${currentTeacher.username}`;
+            document.getElementById('filterDate').valueAsDate = new Date();
+
+            await loadClasses();
+            setupDarkMode();
+        });
+
+        async function loadClasses() {
+            try {
+                const result = await API.getClasses();
+                if (result.success) {
+                    document.getElementById('filterClass').innerHTML = '<option value="">ทุกห้อง</option>' +
+                        result.data.map(c => `<option value="${c.ClassID}">${c.ClassID}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error loading classes:', error);
+            }
+        }
+
+        async function searchRecords() {
+            const date = document.getElementById('filterDate').value;
+            const classId = document.getElementById('filterClass').value;
+            const studentName = document.getElementById('filterStudent').value;
+
+            if (!date) {
+                Utils.showNotification('กรุณาเลือกวันที่', 'error');
+                return;
+            }
+
+            Utils.showLoader();
+
+            try {
+                const result = await API.getAttendance({
+                    teacherId: currentTeacher.linkedId || currentTeacher.userId,
+                    date, class: classId
+                });
+
+                if (result.success) {
+                    let records = result.data;
+
+                    if (studentName) {
+                        records = records.filter(r =>
+                            r.StudentName && r.StudentName.toLowerCase().includes(studentName.toLowerCase())
+                        );
+                    }
+
+                    renderRecords(records);
+                }
+            } catch (error) {
+                console.error('Error searching records:', error);
+                Utils.showNotification('เกิดข้อผิดพลาด', 'error');
+            }
+
+            Utils.hideLoader();
+        }
+
+        function renderRecords(records) {
+            const tbody = document.getElementById('recordsTable');
+
+            if (records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">ไม่พบข้อมูล</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = records.map(record => `
+                <tr class="border-b border-gray-100 dark:border-gray-700">
+                    <td class="py-3 px-4">${record.Date}</td>
+                    <td class="py-3 px-4">${record.StudentName || record.StudentID}</td>
+                    <td class="py-3 px-4">${record.Class}</td>
+                    <td class="py-3 px-4">คาบ ${record.Period || '-'}</td>
+                    <td class="text-center py-3 px-4">
+                        <span class="px-3 py-1 rounded-full text-sm font-bold ${getStatusClass(record.Status)}">
+                            ${getStatusText(record.Status)}
+                        </span>
+                    </td>
+                    <td class="text-center py-3 px-4">
+                        <button onclick='editRecord(${JSON.stringify(record)})' class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-kanit transition-colors">
+                            ✏️ แก้ไข
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getStatusClass(status) {
+            const classes = {
+                'PRESENT': 'bg-green-100 text-green-800',
+                'LATE': 'bg-yellow-100 text-yellow-800',
+                'ABSENT': 'bg-red-100 text-red-800',
+                'LEAVE': 'bg-blue-100 text-blue-800'
+            };
+            return classes[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        function getStatusText(status) {
+            const text = { 'PRESENT': 'มา', 'LATE': 'สาย', 'ABSENT': 'ขาด', 'LEAVE': 'ลา' };
+            return text[status] || '-';
+        }
+
+        function editRecord(record) {
+            currentEdit = record;
+            document.getElementById('editStudentName').textContent = record.StudentName || record.StudentID;
+            document.getElementById('editDate').textContent = record.Date;
+            document.getElementById('editOldStatus').textContent = getStatusText(record.Status);
+            document.getElementById('editNewStatus').value = record.Status;
+            document.getElementById('editReason').value = '';
+            document.getElementById('editModal').classList.add('show');
+        }
+
+        async function saveEdit() {
+            const newStatus = document.getElementById('editNewStatus').value;
+            const reason = document.getElementById('editReason').value.trim();
+
+            if (!reason) {
+                Utils.showNotification('กรุณาระบุเหตุผลในการแก้ไข', 'error');
+                return;
+            }
+
+            Utils.showLoader();
+
+            try {
+                const result = await API.updateAttendance({
+                    recordId: currentEdit.RecordID || `${currentEdit.StudentID}_${currentEdit.Date}`,
+                    newStatus,
+                    reason,
+                    teacherId: currentTeacher.linkedId || currentTeacher.userId
+                });
+
+                if (result.success) {
+                    Utils.showNotification('แก้ไขการเช็คชื่อสำเร็จ', 'success');
+                    closeEditModal();
+                    searchRecords();
+                } else {
+                    Utils.showNotification('เกิดข้อผิดพลาด: ' + (result.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error saving edit:', error);
+                Utils.showNotification('เกิดข้อผิดพลาด', 'error');
+            }
+
+            Utils.hideLoader();
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('show');
+            currentEdit = null;
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('darkModeIcon').textContent = isDark ? '☀️' : '🌙';
+            document.getElementById('darkModeText').textContent = isDark ? 'โหมดกลางวัน' : 'โหมดกลางคืน';
+            localStorage.setItem('darkMode', isDark);
+        }
+        function setupDarkMode() {
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+                document.getElementById('darkModeIcon').textContent = '☀️';
+                document.getElementById('darkModeText').textContent = 'โหมดกลางวัน';
+            }
+        }
+        function logout() { Session.clear(); window.location.href = 'index.html'; }
+    </script>
+</body>
+
+</html>

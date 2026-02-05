@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ผู้ใช้ & สิทธิ์ - Smart Attendance</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .sidebar {
+            width: 280px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            z-index: 50;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+        }
+
+        .sidebar-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            border-left-color: #3b82f6;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: #f9fafb;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <aside class="sidebar">
+        <div class="p-6 border-b">
+            <h2 class="text-lg font-bold font-kanit">Admin Panel</h2>
+        </div>
+        <nav class="py-4">
+            <a href="admin-dashboard.html" class="sidebar-item"><span>📊</span><span
+                    class="font-kanit">Dashboard</span></a>
+            <a href="admin-academic-year.html" class="sidebar-item"><span>📅</span><span
+                    class="font-kanit">ปีการศึกษา</span></a>
+            <a href="admin-students.html" class="sidebar-item"><span>👥</span><span
+                    class="font-kanit">นักเรียน</span></a>
+            <a href="admin-teachers.html" class="sidebar-item"><span>👨‍🏫</span><span class="font-kanit">ครู</span></a>
+            <a href="admin-users.html" class="sidebar-item active"><span>🔐</span><span class="font-kanit">ผู้ใช้ &
+                    สิทธิ์</span></a>
+            <a href="admin-classes.html" class="sidebar-item"><span>🏫</span><span
+                    class="font-kanit">ชั้นเรียน</span></a>
+            <a href="admin-subjects.html" class="sidebar-item"><span>📚</span><span
+                    class="font-kanit">รายวิชา</span></a>
+            <a href="admin-timetable.html" class="sidebar-item"><span>🗓️</span><span
+                    class="font-kanit">ตารางเรียน</span></a>
+            <a href="admin-attendance.html" class="sidebar-item"><span>📊</span><span
+                    class="font-kanit">ข้อมูลการเข้าเรียน</span></a>
+            <a href="admin-warnings.html" class="sidebar-item"><span>⚠️</span><span
+                    class="font-kanit">แจ้งเตือน</span></a>
+            <a href="admin-reports.html" class="sidebar-item"><span>📄</span><span class="font-kanit">รายงาน</span></a>
+            <a href="admin-logs.html" class="sidebar-item"><span>📜</span><span class="font-kanit">Logs</span></a>
+            <a href="admin-settings.html" class="sidebar-item"><span>⚙️</span><span
+                    class="font-kanit">ตั้งค่า</span></a>
+            <a href="admin-backup.html" class="sidebar-item"><span>💾</span><span class="font-kanit">สำรอง</span></a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold font-kanit">🔐 ผู้ใช้ & สิทธิ์</h1>
+                <button onclick="showAddModal()" class="px-6 py-3 bg-blue-500 text-white rounded-lg font-kanit">➕
+                    เพิ่มผู้ใช้</button>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="text-left py-4 px-6 font-kanit">Username</th>
+                            <th class="text-left py-4 px-6 font-kanit">Role</th>
+                            <th class="text-left py-4 px-6 font-kanit">Linked Entity</th>
+                            <th class="text-center py-4 px-6 font-kanit">Status</th>
+                            <th class="text-center py-4 px-6 font-kanit">การดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTable">
+                        <tr>
+                            <td colspan="5" class="text-center py-8 text-gray-500">กำลังโหลด...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Permission Matrix -->
+            <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+                <h2 class="text-xl font-bold font-kanit mb-4">Permission Matrix</h2>
+                <table class="w-full">
+                    <thead>
+                        <tr>
+                            <th class="text-left py-2 px-4 font-kanit">Module</th>
+                            <th class="text-center py-2 px-4 font-kanit">Admin</th>
+                            <th class="text-center py-2 px-4 font-kanit">Teacher</th>
+                            <th class="text-center py-2 px-4 font-kanit">Student</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="py-2 px-4">Dashboard</td>
+                            <td class="text-center">✅</td>
+                            <td class="text-center">✅</td>
+                            <td class="text-center">✅</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 px-4">Take Attendance</td>
+                            <td class="text-center">✅</td>
+                            <td class="text-center">✅</td>
+                            <td class="text-center">❌</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 px-4">Student Management</td>
+                            <td class="text-center">✅</td>
+                            <td class="text-center">❌</td>
+                            <td class="text-center">❌</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 px-4">Reports</td>
+                            <td class="text-center">✅</td>
+                            <td class="text-center">✅</td>
+                            <td class="text-center">❌</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 px-4">System Settings</td>
+                            <td class="text-center">✅</td>
+                            <td class="text-center">❌</td>
+                            <td class="text-center">❌</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="modal" id="userModal">
+            <div class="modal-content">
+                <h2 class="text-2xl font-bold font-kanit mb-6">เพิ่ม/แก้ไขผู้ใช้</h2>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Username *</label>
+                    <input type="text" id="inputUsername" class="w-full px-4 py-2 rounded-lg border">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Password (leave blank to keep current)</label>
+                    <input type="password" id="inputPassword" class="w-full px-4 py-2 rounded-lg border">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Role *</label>
+                    <select id="inputRole" class="w-full px-4 py-2 rounded-lg border" onchange="toggleLinkedEntity()">
+                        <option value="ADMIN">Admin</option>
+                        <option value="TEACHER">Teacher</option>
+                        <option value="STUDENT">Student</option>
+                    </select>
+                </div>
+
+                <div class="mb-6" id="linkedEntityDiv">
+                    <label class="block text-sm font-medium mb-2">Linked ID (Teacher/Student) *</label>
+                    <input type="text" id="inputLinkedID" class="w-full px-4 py-2 rounded-lg border">
+                </div>
+
+                <div class="flex gap-4">
+                    <button onclick="saveUser()"
+                        class="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg font-kanit">✅ บันทึก</button>
+                    <button onclick="closeModal()" class="px-6 py-3 bg-gray-500 text-white rounded-lg font-kanit">❌
+                        ยกเลิก</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        let allUsers = [];
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            if (!Session.requireAuth(['ADMIN'])) return;
+            await loadUsers();
+        });
+
+        async function loadUsers() {
+            Utils.showLoader();
+            try {
+                const result = await API.getUsers();
+                if (result.success) {
+                    allUsers = result.data;
+                    renderUsers();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        function renderUsers() {
+            const tbody = document.getElementById('usersTable');
+            if (allUsers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">ไม่มีผู้ใช้</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = allUsers.map(u => `
+                <tr class="border-b">
+                    <td class="py-4 px-6 font-mono font-bold">${u.Username}</td>
+                    <td class="py-4 px-6">
+                        <span class="px-3 py-1 rounded-full text-sm ${u.Role === 'ADMIN' ? 'bg-red-100 text-red-800' :
+                    u.Role === 'TEACHER' ? 'bg-blue-100 text-blue-800' :
+                        'bg-green-100 text-green-800'
+                }">${u.Role}</span>
+                    </td>
+                    <td class="py-4 px-6">${u.LinkedID || '-'}</td>
+                    <td class="text-center py-4 px-6">
+                        <span class="px-3 py-1 rounded-full text-sm ${u.IsActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}">
+                            ${u.IsActive ? '✅ Active' : '❌ Inactive'}
+                        </span>
+                    </td>
+                    <td class="text-center py-4 px-6">
+                        <div class="flex gap-2 justify-center">
+                            <button onclick='editUser(${JSON.stringify(u)})' class="px-3 py-1 bg-blue-500 text-white rounded text-sm">แก้ไข</button>
+                            <button onclick="toggleUser('${u.Username}', ${!u.IsActive})" class="px-3 py-1 bg-${u.IsActive ? 'red' : 'green'}-500 text-white rounded text-sm">
+                                ${u.IsActive ? 'Deactivate' : 'Activate'}
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showAddModal() {
+            document.getElementById('inputUsername').value = '';
+            document.getElementById('inputPassword').value = '';
+            document.getElementById('inputRole').value = 'ADMIN';
+            document.getElementById('userModal').classList.add('show');
+            toggleLinkedEntity();
+        }
+
+        function editUser(user) {
+            document.getElementById('inputUsername').value = user.Username;
+            document.getElementById('inputRole').value = user.Role;
+            document.getElementById('inputLinkedID').value = user.LinkedID || '';
+            document.getElementById('userModal').classList.add('show');
+            toggleLinkedEntity();
+        }
+
+        function toggleLinkedEntity() {
+            const role = document.getElementById('inputRole').value;
+            const div = document.getElementById('linkedEntityDiv');
+            div.style.display = role === 'ADMIN' ? 'none' : 'block';
+        }
+
+        async function saveUser() {
+            const username = document.getElementById('inputUsername').value;
+            const password = document.getElementById('inputPassword').value;
+            const role = document.getElementById('inputRole').value;
+            const linkedID = document.getElementById('inputLinkedID').value;
+
+            if (!username || !role) {
+                Utils.showNotification('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+                return;
+            }
+
+            Utils.showLoader();
+            try {
+                const result = await API.saveUser({ username, password, role, linkedID });
+                if (result.success) {
+                    Utils.showNotification('บันทึกสำเร็จ', 'success');
+                    closeModal();
+                    await loadUsers();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        async function toggleUser(username, newStatus) {
+            Utils.showLoader();
+            try {
+                const result = await API.toggleUser(username, newStatus);
+                if (result.success) {
+                    Utils.showNotification('เปลี่ยนสถานะสำเร็จ', 'success');
+                    await loadUsers();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        function closeModal() { document.getElementById('userModal').classList.remove('show'); }
+        function logout() { Session.clear(); window.location.href = 'index.html'; }
+    </script>
+</body>
+
+</html>

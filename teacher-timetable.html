@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตารางสอน - Smart Attendance</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .sidebar {
+            width: 280px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            z-index: 50;
+            transition: transform 0.3s ease;
+        }
+
+        .dark .sidebar {
+            background: #1f2937;
+            border-right-color: #374151;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+        }
+
+        .sidebar-item:hover {
+            background: #f3f4f6;
+            color: #3b82f6;
+        }
+
+        .dark .sidebar-item:hover {
+            background: #374151;
+        }
+
+        .sidebar-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            border-left-color: #3b82f6;
+        }
+
+        .dark .sidebar-item.active {
+            background: #1e3a5f;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: #f9fafb;
+        }
+
+        .dark .main-content {
+            background: #111827;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        .timetable-grid {
+            display: grid;
+            grid-template-columns: 80px repeat(5, 1fr);
+            gap: 2px;
+            background: #e5e7eb;
+        }
+
+        .dark .timetable-grid {
+            background: #374151;
+        }
+
+        .timetable-cell {
+            background: white;
+            padding: 12px;
+            min-height: 80px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dark .timetable-cell {
+            background: #1f2937;
+            color: white;
+        }
+
+        .timetable-cell:hover {
+            background: #eff6ff;
+            transform: scale(1.02);
+        }
+
+        .dark .timetable-cell:hover {
+            background: #1e3a5f;
+        }
+
+        .timetable-cell.current {
+            background: #dbeafe;
+            border: 2px solid #3b82f6;
+            animation: pulse 2s infinite;
+        }
+
+        .dark .timetable-cell.current {
+            background: #1e3a5f;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        .alert-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 font-sans">
+    <button class="md:hidden fixed top-4 left-4 z-50 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
+        onclick="toggleSidebar()">
+        <span class="text-2xl">☰</span>
+    </button>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-3 mb-3">
+                <img src="https://img5.pic.in.th/file/secure-sv1/-668e94e3b2fda05e3.png" alt="Logo" class="h-12">
+                <div>
+                    <h2 class="text-lg font-bold font-kanit text-gray-800 dark:text-white">ระบบครู</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400" id="sidebarTeacherName">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="py-4">
+            <a href="teacher-dashboard.html" class="sidebar-item">
+                <span class="text-2xl">📊</span>
+                <span class="font-kanit font-medium">Dashboard</span>
+            </a>
+            <a href="teacher-attendance.html" class="sidebar-item">
+                <span class="text-2xl">📝</span>
+                <span class="font-kanit font-medium">เช็คชื่อ</span>
+            </a>
+            <a href="teacher-timetable.html" class="sidebar-item active">
+                <span class="text-2xl">📅</span>
+                <span class="font-kanit font-medium">ตารางสอน</span>
+            </a>
+            <a href="teacher-summary.html" class="sidebar-item">
+                <span class="text-2xl">📈</span>
+                <span class="font-kanit font-medium">สรุปการเข้าเรียน</span>
+            </a>
+            <a href="teacher-students.html" class="sidebar-item">
+                <span class="text-2xl">👥</span>
+                <span class="font-kanit font-medium">นักเรียนของฉัน</span>
+            </a>
+            <a href="teacher-warning.html" class="sidebar-item" style="position: relative;">
+                <span class="text-2xl">⚠️</span>
+                <span class="font-kanit font-medium">แจ้งเตือนเสี่ยง</span>
+                <span class="alert-badge" id="warningBadge" style="display: none;">0</span>
+            </a>
+            <a href="teacher-adjustment.html" class="sidebar-item">
+                <span class="text-2xl">🔧</span>
+                <span class="font-kanit font-medium">แก้ไขการเช็คชื่อ</span>
+            </a>
+            <a href="teacher-reports.html" class="sidebar-item">
+                <span class="text-2xl">📄</span>
+                <span class="font-kanit font-medium">รายงาน & Export</span>
+            </a>
+            <a href="teacher-profile.html" class="sidebar-item">
+                <span class="text-2xl">👤</span>
+                <span class="font-kanit font-medium">โปรไฟล์ครู</span>
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700 mt-auto">
+            <button onclick="toggleDarkMode()"
+                class="w-full px-4 py-2 mb-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-kanit text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <span id="darkModeIcon">🌙</span> <span id="darkModeText">โหมดกลางคืน</span>
+            </button>
+            <button onclick="logout()"
+                class="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-kanit text-sm transition-colors">
+                🚪 ออกจากระบบ
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold font-kanit text-gray-800 dark:text-white mb-2">📅 ตารางสอนของฉัน</h1>
+                    <p class="text-gray-600 dark:text-gray-400">ตารางสอนรายวันและรายสัปดาห์</p>
+                </div>
+                <div class="flex gap-2">
+                    <button id="btnDaily" onclick="switchView('daily')"
+                        class="px-4 py-2 bg-blue-500 text-white rounded-lg font-kanit">รายวัน</button>
+                    <button id="btnWeekly" onclick="switchView('weekly')"
+                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-kanit">รายสัปดาห์</button>
+                </div>
+            </div>
+
+            <!-- Daily View -->
+            <div id="dailyView">
+                <div class="card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">เลือกวัน</label>
+                        <select id="daySelector" onchange="loadDaily()"
+                            class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                            <option value="1">จันทร์</option>
+                            <option value="2">อังคาร</option>
+                            <option value="3">พุธ</option>
+                            <option value="4">พฤหัสบดี</option>
+                            <option value="5">ศุกร์</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-3" id="dailyContent">
+                    <p class="text-gray-500 dark:text-gray-400 text-center py-8">กำลังโหลด...</p>
+                </div>
+            </div>
+
+            <!-- Weekly View -->
+            <div id="weeklyView" class="hidden">
+                <div class="overflow-x-auto">
+                    <div class="timetable-grid min-w-max" id="weeklyGrid">
+                        <!-- Header -->
+                        <div class="timetable-cell font-bold bg-gray-100 dark:bg-gray-800">คาบ</div>
+                        <div class="timetable-cell font-bold bg-gray-100 dark:bg-gray-800">จันทร์</div>
+                        <div class="timetable-cell font-bold bg-gray-100 dark:bg-gray-800">อังคาร</div>
+                        <div class="timetable-cell font-bold bg-gray-100 dark:bg-gray-800">พุธ</div>
+                        <div class="timetable-cell font-bold bg-gray-100 dark:bg-gray-800">พฤหัสบดี</div>
+                        <div class="timetable-cell font-bold bg-gray-100 dark:bg-gray-800">ศุกร์</div>
+
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
+            <div class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-600 dark:text-gray-400">
+                <p class="font-kanit">FREEMAN STUDIO BY KRUKAI</p>
+                <p class="text-sm mt-1">© 2026 Smart Attendance System</p>
+            </div>
+        </footer>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        let currentTeacher = null;
+        let timetableData = [];
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            if (!Session.requireAuth(['TEACHER'])) return;
+
+            currentTeacher = Session.get();
+            document.getElementById('sidebarTeacherName').textContent = `ครู ${currentTeacher.username}`;
+
+            await loadTimetable();
+            setupDarkMode();
+
+            const today = new Date().getDay();
+            if (today >= 1 && today <= 5) {
+                document.getElementById('daySelector').value = today.toString();
+            }
+            loadDaily();
+        });
+
+        async function loadTimetable() {
+            Utils.showLoader();
+
+            try {
+                const result = await API.getTimetable(currentTeacher.linkedId || currentTeacher.userId);
+                if (result.success) {
+                    timetableData = result.data;
+                }
+            } catch (error) {
+                console.error('Error loading timetable:', error);
+                Utils.showNotification('เกิดข้อผิดพลาด', 'error');
+            }
+
+            Utils.hideLoader();
+        }
+
+        function loadDaily() {
+            const day = parseInt(document.getElementById('daySelector').value);
+            const dayData = timetableData.filter(t => t.Day === day);
+
+            const container = document.getElementById('dailyContent');
+
+            if (dayData.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">ไม่มีคาบเรียนในวันนี้</p>';
+                return;
+            }
+
+            dayData.sort((a, b) => a.Period - b.Period);
+
+            container.innerHTML = dayData.map(entry => `
+                <div class="card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer" 
+                     onclick="window.location.href='teacher-attendance.html?subject=${entry.SubjectID}&class=${entry.ClassID}&period=${entry.Period}'">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="px-3 py-1 bg-blue-500 text-white text-sm rounded-lg font-bold">คาบ ${entry.Period}</span>
+                                <span class="text-xl font-bold text-gray-800 dark:text-white">${entry.SubjectID}</span>
+                            </div>
+                            <div class="text-gray-600 dark:text-gray-400">
+                                <div>ห้อง: <span class="font-semibold">${entry.ClassID}</span></div>
+                                <div>เวลา: ${entry.StartTime || '-'} - ${entry.EndTime || '-'}</div>
+                                ${entry.Room ? `<div>ห้อง: ${entry.Room}</div>` : ''}
+                            </div>
+                        </div>
+                        <div class="text-4xl">▶️</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function switchView(view) {
+            if (view === 'daily') {
+                document.getElementById('btnDaily').className = 'px-4 py-2 bg-blue-500 text-white rounded-lg font-kanit';
+                document.getElementById('btnWeekly').className = 'px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-kanit';
+                document.getElementById('dailyView').classList.remove('hidden');
+                document.getElementById('weeklyView').classList.add('hidden');
+                loadDaily();
+            } else {
+                document.getElementById('btnDaily').className = 'px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-kanit';
+                document.getElementById('btnWeekly').className = 'px-4 py-2 bg-blue-500 text-white rounded-lg font-kanit';
+                document.getElementById('dailyView').classList.add('hidden');
+                document.getElementById('weeklyView').classList.remove('hidden');
+                loadWeekly();
+            }
+        }
+
+        function loadWeekly() {
+            const grid = document.getElementById('weeklyGrid');
+            const maxPeriod = Math.max(...timetableData.map(t => t.Period), 8);
+
+            let html = `
+                <div class="timetable-cell font-bold bg-gray-100 dark:bg-gray-800">คาบ</div>
+                <div class="timetable-cell font-bold bg-gray-100 dark:bg-gray-800">จันทร์</div>
+                <div class="timetable-cell font-bold bg-gray-100 dark:bg-gray-800">อังคาร</div>
+                <div class="timetable-cell font-bold bg-gray-100 dark:bg-gray-800">พุธ</div>
+                <div class="timetable-cell font-bold bg-gray-100 dark:bg-gray-800">พฤหัสบดี</div>
+                <div class="timetable-cell font-bold bg-gray-100 dark:bg-gray-800">ศุกร์</div>
+            `;
+
+            for (let period = 1; period <= maxPeriod; period++) {
+                html += `<div class="timetable-cell font-bold bg-gray-50 dark:bg-gray-800">${period}</div>`;
+
+                for (let day = 1; day <= 5; day++) {
+                    const entry = timetableData.find(t => t.Day === day && t.Period === period);
+
+                    if (entry) {
+                        const isCurrentPeriod = isCurrentClass(day, period);
+                        html += `
+                            <div class="timetable-cell ${isCurrentPeriod ? 'current' : ''}" 
+                                 onclick="window.location.href='teacher-attendance.html?subject=${entry.SubjectID}&class=${entry.ClassID}&period=${entry.Period}'">
+                                <div class="font-bold text-blue-600 dark:text-blue-400">${entry.SubjectID}</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">${entry.ClassID}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-500">${entry.StartTime || ''}</div>
+                            </div>
+                        `;
+                    } else {
+                        html += `<div class="timetable-cell"></div>`;
+                    }
+                }
+            }
+
+            grid.innerHTML = html;
+        }
+
+        function isCurrentClass(day, period) {
+            const now = new Date();
+            const currentDay = now.getDay();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+
+            if (currentDay !== day) return false;
+
+            const periodTimes = {
+                1: { start: 8, end: 9 },
+                2: { start: 9, end: 10 },
+                3: { start: 10, end: 11 },
+                4: { start: 11, end: 12 },
+                5: { start: 13, end: 14 },
+                6: { start: 14, end: 15 },
+                7: { start: 15, end: 16 },
+                8: { start: 16, end: 17 }
+            };
+
+            const times = periodTimes[period];
+            if (!times) return false;
+
+            return currentHour >= times.start && currentHour < times.end;
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('darkModeIcon').textContent = isDark ? '☀️' : '🌙';
+            document.getElementById('darkModeText').textContent = isDark ? 'โหมดกลางวัน' : 'โหมดกลางคืน';
+            localStorage.setItem('darkMode', isDark);
+        }
+
+        function setupDarkMode() {
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+                document.getElementById('darkModeIcon').textContent = '☀️';
+                document.getElementById('darkModeText').textContent = 'โหมดกลางวัน';
+            }
+        }
+
+        function logout() {
+            Session.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+
+</html>

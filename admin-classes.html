@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ชั้นเรียน & ห้องเรียน - Smart Attendance</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .sidebar {
+            width: 280px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            z-index: 50;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+        }
+
+        .sidebar-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            border-left-color: #3b82f6;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: #f9fafb;
+        }
+
+        .class-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .class-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <aside class="sidebar">
+        <div class="p-6 border-b">
+            <h2 class="text-lg font-bold font-kanit">Admin Panel</h2>
+        </div>
+        <nav class="py-4">
+            <a href="admin-dashboard.html" class="sidebar-item"><span>📊</span><span
+                    class="font-kanit">Dashboard</span></a>
+            <a href="admin-academic-year.html" class="sidebar-item"><span>📅</span><span
+                    class="font-kanit">ปีการศึกษา</span></a>
+            <a href="admin-students.html" class="sidebar-item"><span>👥</span><span
+                    class="font-kanit">นักเรียน</span></a>
+            <a href="admin-teachers.html" class="sidebar-item"><span>👨‍🏫</span><span class="font-kanit">ครู</span></a>
+            <a href="admin-users.html" class="sidebar-item"><span>🔐</span><span class="font-kanit">ผู้ใช้ &
+                    สิทธิ์</span></a>
+            <a href="admin-classes.html" class="sidebar-item active"><span>🏫</span><span
+                    class="font-kanit">ชั้นเรียน</span></a>
+            <a href="admin-subjects.html" class="sidebar-item"><span>📚</span><span
+                    class="font-kanit">รายวิชา</span></a>
+            <a href="admin-timetable.html" class="sidebar-item"><span>🗓️</span><span
+                    class="font-kanit">ตารางเรียน</span></a>
+            <a href="admin-attendance.html" class="sidebar-item"><span>📊</span><span
+                    class="font-kanit">ข้อมูลการเข้าเรียน</span></a>
+            <a href="admin-warnings.html" class="sidebar-item"><span>⚠️</span><span
+                    class="font-kanit">แจ้งเตือน</span></a>
+            <a href="admin-reports.html" class="sidebar-item"><span>📄</span><span class="font-kanit">รายงาน</span></a>
+            <a href="admin-logs.html" class="sidebar-item"><span>📜</span><span class="font-kanit">Logs</span></a>
+            <a href="admin-settings.html" class="sidebar-item"><span>⚙️</span><span
+                    class="font-kanit">ตั้งค่า</span></a>
+            <a href="admin-backup.html" class="sidebar-item"><span>💾</span><span class="font-kanit">สำรอง</span></a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold font-kanit">🏫 ชั้นเรียน & ห้องเรียน</h1>
+                <button onclick="showAddModal()" class="px-6 py-3 bg-blue-500 text-white rounded-lg font-kanit">➕
+                    เพิ่มห้องเรียน</button>
+            </div>
+
+            <!-- Grade Tabs -->
+            <div class="flex gap-2 mb-6 overflow-x-auto">
+                <button onclick="showGrade(1)"
+                    class="px-6 py-3 bg-white rounded-lg font-kanit font-bold hover:bg-blue-50 grade-tab"
+                    data-grade="1">ป.1</button>
+                <button onclick="showGrade(2)"
+                    class="px-6 py-3 bg-white rounded-lg font-kanit font-bold hover:bg-blue-50 grade-tab"
+                    data-grade="2">ป.2</button>
+                <button onclick="showGrade(3)"
+                    class="px-6 py-3 bg-white rounded-lg font-kanit font-bold hover:bg-blue-50 grade-tab"
+                    data-grade="3">ป.3</button>
+                <button onclick="showGrade(4)"
+                    class="px-6 py-3 bg-white rounded-lg font-kanit font-bold hover:bg-blue-50 grade-tab"
+                    data-grade="4">ป.4</button>
+                <button onclick="showGrade(5)"
+                    class="px-6 py-3 bg-white rounded-lg font-kanit font-bold hover:bg-blue-50 grade-tab"
+                    data-grade="5">ป.5</button>
+                <button onclick="showGrade(6)"
+                    class="px-6 py-3 bg-white rounded-lg font-kanit font-bold hover:bg-blue-50 grade-tab"
+                    data-grade="6">ป.6</button>
+            </div>
+
+            <!-- Classes Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="classesGrid">
+                <p class="text-gray-500 col-span-full text-center py-8">กำลังโหลด...</p>
+            </div>
+        </div>
+
+        <div class="modal" id="classModal">
+            <div class="modal-content">
+                <h2 class="text-2xl font-bold font-kanit mb-6">เพิ่ม/แก้ไขห้องเรียน</h2>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">ระดับชั้น *</label>
+                        <select id="inputGrade" class="w-full px-4 py-2 rounded-lg border">
+                            <option value="1">ป.1</option>
+                            <option value="2">ป.2</option>
+                            <option value="3">ป.3</option>
+                            <option value="4">ป.4</option>
+                            <option value="5">ป.5</option>
+                            <option value="6">ป.6</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">ห้อง *</label>
+                        <input type="number" id="inputSection" class="w-full px-4 py-2 rounded-lg border"
+                            placeholder="1">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">ครูประจำชั้น</label>
+                    <select id="inputHomeroom" class="w-full px-4 py-2 rounded-lg border"></select>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2">จำนวนที่นั่ง (Capacity)</label>
+                    <input type="number" id="inputCapacity" class="w-full px-4 py-2 rounded-lg border" value="40">
+                </div>
+
+                <div class="flex gap-4">
+                    <button onclick="saveClass()"
+                        class="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg font-kanit">✅ บันทึก</button>
+                    <button onclick="closeModal()" class="px-6 py-3 bg-gray-500 text-white rounded-lg font-kanit">❌
+                        ยกเลิก</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        let allClasses = [];
+        let currentGrade = 1;
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            if (!Session.requireAuth(['ADMIN'])) return;
+            await loadClasses();
+            await loadTeachers();
+            showGrade(1);
+        });
+
+        async function loadClasses() {
+            Utils.showLoader();
+            try {
+                const result = await API.getClasses();
+                if (result.success) {
+                    allClasses = result.data;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        async function loadTeachers() {
+            try {
+                const result = await API.getTeachers();
+                if (result.success) {
+                    const select = document.getElementById('inputHomeroom');
+                    select.innerHTML = '<option value="">ไม่ระบุ</option>' + result.data.map(t => `<option value="${t.TeacherID}">${t.Name}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function showGrade(grade) {
+            currentGrade = grade;
+            document.querySelectorAll('.grade-tab').forEach(tab => {
+                tab.classList.remove('bg-blue-500', 'text-white');
+                tab.classList.add('bg-white');
+            });
+            document.querySelector(`[data-grade="${grade}"]`).classList.add('bg-blue-500', 'text-white');
+
+            renderClasses();
+        }
+
+        function renderClasses() {
+            const grid = document.getElementById('classesGrid');
+            const gradeClasses = allClasses.filter(c => c.Grade === currentGrade);
+
+            if (gradeClasses.length === 0) {
+                grid.innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">ไม่มีห้องเรียน</p>';
+                return;
+            }
+
+            grid.innerHTML = gradeClasses.map(c => `
+                <div class="class-card" onclick='viewClass(${JSON.stringify(c)})'>
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <div class="text-2xl font-bold text-blue-500 font-kanit">ห้อง ${c.Section}</div>
+                            <div class="text-sm text-gray-600">ป.${c.Grade}/${c.Section}</div>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-sm ${c.IsActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}">
+                            ${c.IsActive ? '🟢 เปิด' : '🔒 ปิด'}
+                        </span>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">นักเรียน:</span>
+                            <span class="font-bold">${c.StudentCount || 0} / ${c.Capacity || 40}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">ครูประจำชั้น:</span>
+                            <span class="font-bold">${c.HomeroomTeacher || '-'}</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t flex gap-2">
+                        <button onclick="editClass(event, ${JSON.stringify(c)})" class="flex-1 px-3 py-2 bg-blue-500 text-white rounded text-sm">แก้ไข</button>
+                        <button onclick="toggleClass(event, '${c.ClassID}', ${!c.IsActive})" class="px-3 py-2 bg-${c.IsActive ? 'red' : 'green'}-500 text-white rounded text-sm">
+                            ${c.IsActive ? 'ปิด' : 'เปิด'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showAddModal() {
+            document.getElementById('inputGrade').value = currentGrade;
+            document.getElementById('classModal').classList.add('show');
+        }
+
+        function viewClass(classData) {
+            console.log('View class:', classData);
+        }
+
+        function editClass(event, classData) {
+            event.stopPropagation();
+            document.getElementById('inputGrade').value = classData.Grade;
+            document.getElementById('inputSection').value = classData.Section;
+            document.getElementById('classModal').classList.add('show');
+        }
+
+        async function saveClass() {
+            const grade = document.getElementById('inputGrade').value;
+            const section = document.getElementById('inputSection').value;
+            const homeroom = document.getElementById('inputHomeroom').value;
+            const capacity = document.getElementById('inputCapacity').value;
+
+            if (!grade || !section) {
+                Utils.showNotification('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+                return;
+            }
+
+            Utils.showLoader();
+            try {
+                const result = await API.saveClass({ grade, section, homeroom, capacity });
+                if (result.success) {
+                    Utils.showNotification('บันทึกสำเร็จ', 'success');
+                    closeModal();
+                    await loadClasses();
+                    renderClasses();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        async function toggleClass(event, classID, newStatus) {
+            event.stopPropagation();
+            Utils.showLoader();
+            try {
+                const result = await API.toggleClass(classID, newStatus);
+                if (result.success) {
+                    Utils.showNotification('เปลี่ยนสถานะสำเร็จ', 'success');
+                    await loadClasses();
+                    renderClasses();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        function closeModal() { document.getElementById('classModal').classList.remove('show'); }
+        function logout() { Session.clear(); window.location.href = 'index.html'; }
+    </script>
+</body>
+
+</html>

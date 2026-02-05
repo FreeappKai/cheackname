@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ปีการศึกษา & ภาคเรียน - Smart Attendance</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .sidebar {
+            width: 280px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            z-index: 50;
+            transition: transform 0.3s ease;
+        }
+
+        .dark .sidebar {
+            background: #1f2937;
+            border-right-color: #374151;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+        }
+
+        .sidebar-item:hover {
+            background: #f3f4f6;
+            color: #3b82f6;
+        }
+
+        .dark .sidebar-item:hover {
+            background: #374151;
+        }
+
+        .sidebar-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            border-left-color: #3b82f6;
+        }
+
+        .dark .sidebar-item.active {
+            background: #1e3a5f;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: #f9fafb;
+        }
+
+        .dark .main-content {
+            background: #111827;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .dark .modal-content {
+            background: #1f2937;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 font-sans">
+    <button class="md:hidden fixed top-4 left-4 z-50 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
+        onclick="toggleSidebar()"><span class="text-2xl">☰</span></button>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-3 mb-3">
+                <img src="https://img5.pic.in.th/file/secure-sv1/-668e94e3b2fda05e3.png" alt="Logo" class="h-12">
+                <div>
+                    <h2 class="text-lg font-bold font-kanit text-gray-800 dark:text-white">Admin Panel</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">School Management</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="py-4">
+            <a href="admin-dashboard.html" class="sidebar-item"><span class="text-2xl">📊</span><span
+                    class="font-kanit font-medium">Dashboard</span></a>
+            <a href="admin-academic-year.html" class="sidebar-item active"><span class="text-2xl">📅</span><span
+                    class="font-kanit font-medium">ปีการศึกษา</span></a>
+            <a href="admin-students.html" class="sidebar-item"><span class="text-2xl">👥</span><span
+                    class="font-kanit font-medium">นักเรียน</span></a>
+            <a href="admin-teachers.html" class="sidebar-item"><span class="text-2xl">👨‍🏫</span><span
+                    class="font-kanit font-medium">ครู</span></a>
+            <a href="admin-users.html" class="sidebar-item"><span class="text-2xl">🔐</span><span
+                    class="font-kanit font-medium">ผู้ใช้ & สิทธิ์</span></a>
+            <a href="admin-classes.html" class="sidebar-item"><span class="text-2xl">🏫</span><span
+                    class="font-kanit font-medium">ชั้นเรียน</span></a>
+            <a href="admin-subjects.html" class="sidebar-item"><span class="text-2xl">📚</span><span
+                    class="font-kanit font-medium">รายวิชา</span></a>
+            <a href="admin-timetable.html" class="sidebar-item"><span class="text-2xl">🗓️</span><span
+                    class="font-kanit font-medium">ตารางเรียน</span></a>
+            <a href="admin-attendance.html" class="sidebar-item"><span class="text-2xl">📊</span><span
+                    class="font-kanit font-medium">ข้อมูลการเข้าเรียน</span></a>
+            <a href="admin-warnings.html" class="sidebar-item"><span class="text-2xl">⚠️</span><span
+                    class="font-kanit font-medium">แจ้งเตือน</span></a>
+            <a href="admin-reports.html" class="sidebar-item"><span class="text-2xl">📄</span><span
+                    class="font-kanit font-medium">รายงาน</span></a>
+            <a href="admin-logs.html" class="sidebar-item"><span class="text-2xl">📜</span><span
+                    class="font-kanit font-medium">Logs</span></a>
+            <a href="admin-settings.html" class="sidebar-item"><span class="text-2xl">⚙️</span><span
+                    class="font-kanit font-medium">ตั้งค่า</span></a>
+            <a href="admin-backup.html" class="sidebar-item"><span class="text-2xl">💾</span><span
+                    class="font-kanit font-medium">สำรอง</span></a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700 mt-auto">
+            <button onclick="toggleDarkMode()"
+                class="w-full px-4 py-2 mb-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-kanit text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <span id="darkModeIcon">🌙</span> <span id="darkModeText">โหมดกลางคืน</span>
+            </button>
+            <button onclick="logout()"
+                class="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-kanit text-sm transition-colors">🚪
+                ออกจากระบบ</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold font-kanit text-gray-800 dark:text-white">📅 ปีการศึกษา & ภาคเรียน</h1>
+                <button onclick="showAddModal()"
+                    class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-kanit transition-colors">
+                    ➕ เพิ่มปีการศึกษา
+                </button>
+            </div>
+
+            <!-- Current Active Year -->
+            <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 mb-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-sm opacity-80">ปีการศึกษาปัจจุบัน</div>
+                        <div class="text-4xl font-bold" id="currentYear">2567</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm opacity-80">ภาคเรียน</div>
+                        <div class="text-4xl font-bold" id="currentSemester">1</div>
+                    </div>
+                    <div class="text-6xl">📚</div>
+                </div>
+            </div>
+
+            <!-- Academic Years Table -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="text-left py-4 px-6 font-kanit">ปีการศึกษา</th>
+                            <th class="text-left py-4 px-6 font-kanit">ภาคเรียนที่ 1</th>
+                            <th class="text-left py-4 px-6 font-kanit">ภาคเรียนที่ 2</th>
+                            <th class="text-center py-4 px-6 font-kanit">สถานะ</th>
+                            <th class="text-center py-4 px-6 font-kanit">การดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="yearsTable">
+                        <tr>
+                            <td colspan="5" class="text-center py-8 text-gray-500">กำลังโหลด...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Add/Edit Modal -->
+        <div class="modal" id="yearModal">
+            <div class="modal-content">
+                <h2 class="text-2xl font-bold font-kanit text-gray-800 dark:text-white mb-6">เพิ่มปีการศึกษา</h2>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">ปีการศึกษา
+                        (พ.ศ.)</label>
+                    <input type="number" id="inputYear" placeholder="2567"
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">เริ่มภาคเรียนที่
+                            1</label>
+                        <input type="date" id="inputSem1Start"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">สิ้นสุดภาคเรียนที่
+                            1</label>
+                        <input type="date" id="inputSem1End"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">เริ่มภาคเรียนที่
+                            2</label>
+                        <input type="date" id="inputSem2Start"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">สิ้นสุดภาคเรียนที่
+                            2</label>
+                        <input type="date" id="inputSem2End"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <button onclick="saveYear()"
+                        class="flex-1 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-kanit transition-colors">✅
+                        บันทึก</button>
+                    <button onclick="closeModal()"
+                        class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-kanit transition-colors">❌
+                        ยกเลิก</button>
+                </div>
+            </div>
+        </div>
+
+        <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
+            <div class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-600 dark:text-gray-400">
+                <p class="font-kanit">FREEMAN STUDIO BY KRUKAI</p>
+                <p class="text-sm mt-1">© 2026 Smart Attendance System</p>
+            </div>
+        </footer>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        let academicYears = [];
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            if (!Session.requireAuth(['ADMIN'])) return;
+
+            await loadYears();
+            setupDarkMode();
+        });
+
+        async function loadYears() {
+            Utils.showLoader();
+
+            try {
+                const result = await API.getAcademicYears();
+                if (result.success) {
+                    academicYears = result.data || [];
+                    renderYears();
+
+                    const active = academicYears.find(y => y.IsActive);
+                    if (active) {
+                        document.getElementById('currentYear').textContent = active.Year;
+                        document.getElementById('currentSemester').textContent = active.CurrentSemester || 1;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading years:', error);
+                Utils.showNotification('เกิดข้อผิดพลาด', 'error');
+            }
+
+            Utils.hideLoader();
+        }
+
+        function renderYears() {
+            const tbody = document.getElementById('yearsTable');
+
+            if (academicYears.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">ไม่มีข้อมูล</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = academicYears.map(year => `
+                <tr class="border-b border-gray-100 dark:border-gray-700">
+                    <td class="py-4 px-6 font-bold text-gray-800 dark:text-white">${year.Year}</td>
+                    <td class="py-4 px-6">
+                        <div class="text-sm">${year.Sem1Start || '-'} ถึง ${year.Sem1End || '-'}</div>
+                        <span class="px-2 py-1 text-xs rounded-full ${year.Sem1Status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}">
+                            ${year.Sem1Status === 'ACTIVE' ? '🟢 เปิด' : '🔒 ปิด'}
+                        </span>
+                    </td>
+                    <td class="py-4 px-6">
+                        <div class="text-sm">${year.Sem2Start || '-'} ถึง ${year.Sem2End || '-'}</div>
+                        <span class="px-2 py-1 text-xs rounded-full ${year.Sem2Status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}">
+                            ${year.Sem2Status === 'ACTIVE' ? '🟢 เปิด' : '🔒 ปิด'}
+                        </span>
+                    </td>
+                    <td class="py-4 px-6 text-center">
+                        <span class="px-3 py-1 rounded-full text-sm font-bold ${year.IsActive ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}">
+                            ${year.IsActive ? '⭐ ปัจจุบัน' : 'ไม่ใช้งาน'}
+                        </span>
+                    </td>
+                    <td class="py-4 px-6 text-center">
+                        <div class="flex gap-2 justify-center">
+                            ${!year.IsActive ? `<button onclick="activateYear('${year.Year}')" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm">เปิดใช้งาน</button>` : ''}
+                            <button onclick="toggleSemester('${year.Year}', 1)" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-sm">ภาค 1</button>
+                            <button onclick="toggleSemester('${year.Year}', 2)" class="px-3 py-1 bg-purple-500 hover:bg-purple-600 text-white rounded text-sm">ภาค 2</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showAddModal() {
+            document.getElementById('yearModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('yearModal').classList.remove('show');
+        }
+
+        async function saveYear() {
+            const year = document.getElementById('inputYear').value;
+            const sem1Start = document.getElementById('inputSem1Start').value;
+            const sem1End = document.getElementById('inputSem1End').value;
+            const sem2Start = document.getElementById('inputSem2Start').value;
+            const sem2End = document.getElementById('inputSem2End').value;
+
+            if (!year || !sem1Start || !sem1End || !sem2Start || !sem2End) {
+                Utils.showNotification('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+                return;
+            }
+
+            Utils.showLoader();
+
+            try {
+                const result = await API.createAcademicYear({
+                    year, sem1Start, sem1End, sem2Start, sem2End
+                });
+
+                if (result.success) {
+                    Utils.showNotification('เพิ่มปีการศึกษาสำเร็จ', 'success');
+                    closeModal();
+                    await loadYears();
+                }
+            } catch (error) {
+                console.error('Error saving year:', error);
+                Utils.showNotification('เกิดข้อผิดพลาด', 'error');
+            }
+
+            Utils.hideLoader();
+        }
+
+        async function activateYear(year) {
+            if (!confirm(`ต้องการเปิดใช้งานปีการศึกษา ${year} หรือไม่?`)) return;
+
+            Utils.showLoader();
+
+            try {
+                const result = await API.setActiveYear(year);
+                if (result.success) {
+                    Utils.showNotification('เปลี่ยนปีการศึกษาสำเร็จ', 'success');
+                    await loadYears();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Utils.showNotification('เกิดข้อผิดพลาด', 'error');
+            }
+
+            Utils.hideLoader();
+        }
+
+        async function toggleSemester(year, semester) {
+            if (!confirm(`ต้องการเปิด/ปิดภาคเรียนที่ ${semester} หรือไม่?\n\n⚠️ การปิดภาคเรียนจะล็อกข้อมูลทั้งหมดในภาคนี้`)) return;
+
+            Utils.showLoader();
+
+            try {
+                const result = await API.toggleSemester(year, semester);
+                if (result.success) {
+                    Utils.showNotification('เปลี่ยนสถานะภาคเรียนสำเร็จ', 'success');
+                    await loadYears();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Utils.showNotification('เกิดข้อผิดพลาด', 'error');
+            }
+
+            Utils.hideLoader();
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('darkModeIcon').textContent = isDark ? '☀️' : '🌙';
+            document.getElementById('darkModeText').textContent = isDark ? 'โหมดกลางวัน' : 'โหมดกลางคืน';
+            localStorage.setItem('darkMode', isDark);
+        }
+        function setupDarkMode() {
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+                document.getElementById('darkModeIcon').textContent = '☀️';
+                document.getElementById('darkModeText').textContent = 'โหมดกลางวัน';
+            }
+        }
+        function logout() { Session.clear(); window.location.href = 'index.html'; }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แจ้งเตือนเสี่ยง - Smart Attendance</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .sidebar {
+            width: 280px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            z-index: 50;
+            transition: transform 0.3s ease;
+        }
+
+        .dark .sidebar {
+            background: #1f2937;
+            border-right-color: #374151;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+        }
+
+        .sidebar-item:hover {
+            background: #f3f4f6;
+            color: #3b82f6;
+        }
+
+        .dark .sidebar-item:hover {
+            background: #374151;
+        }
+
+        .sidebar-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            border-left-color: #3b82f6;
+        }
+
+        .dark .sidebar-item.active {
+            background: #1e3a5f;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: #f9fafb;
+        }
+
+        .dark .main-content {
+            background: #111827;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        .risk-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+
+        .dark .risk-card {
+            background: #1f2937;
+            border-color: #374151;
+        }
+
+        .risk-badge {
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .risk-high {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+
+        .risk-watch {
+            background: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fcd34d;
+        }
+
+        .risk-normal {
+            background: #d1fae5;
+            color: #059669;
+            border: 1px solid #6ee7b7;
+        }
+
+        .alert-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 font-sans">
+    <button class="md:hidden fixed top-4 left-4 z-50 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
+        onclick="toggleSidebar()">
+        <span class="text-2xl">☰</span>
+    </button>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-3 mb-3">
+                <img src="https://img5.pic.in.th/file/secure-sv1/-668e94e3b2fda05e3.png" alt="Logo" class="h-12">
+                <div>
+                    <h2 class="text-lg font-bold font-kanit text-gray-800 dark:text-white">ระบบครู</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400" id="sidebarTeacherName">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="py-4">
+            <a href="teacher-dashboard.html" class="sidebar-item"><span class="text-2xl">📊</span><span
+                    class="font-kanit font-medium">Dashboard</span></a>
+            <a href="teacher-attendance.html" class="sidebar-item"><span class="text-2xl">📝</span><span
+                    class="font-kanit font-medium">เช็คชื่อ</span></a>
+            <a href="teacher-timetable.html" class="sidebar-item"><span class="text-2xl">📅</span><span
+                    class="font-kanit font-medium">ตารางสอน</span></a>
+            <a href="teacher-summary.html" class="sidebar-item"><span class="text-2xl">📈</span><span
+                    class="font-kanit font-medium">สรุปการเข้าเรียน</span></a>
+            <a href="teacher-students.html" class="sidebar-item"><span class="text-2xl">👥</span><span
+                    class="font-kanit font-medium">นักเรียนของฉัน</span></a>
+            <a href="teacher-warning.html" class="sidebar-item active" style="position: relative;"><span
+                    class="text-2xl">⚠️</span><span class="font-kanit font-medium">แจ้งเตือนเสี่ยง</span><span
+                    class="alert-badge" id="warningBadge" style="display: none;">0</span></a>
+            <a href="teacher-adjustment.html" class="sidebar-item"><span class="text-2xl">🔧</span><span
+                    class="font-kanit font-medium">แก้ไขการเช็คชื่อ</span></a>
+            <a href="teacher-reports.html" class="sidebar-item"><span class="text-2xl">📄</span><span
+                    class="font-kanit font-medium">รายงาน & Export</span></a>
+            <a href="teacher-profile.html" class="sidebar-item"><span class="text-2xl">👤</span><span
+                    class="font-kanit font-medium">โปรไฟล์ครู</span></a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700 mt-auto">
+            <button onclick="toggleDarkMode()"
+                class="w-full px-4 py-2 mb-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-kanit text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <span id="darkModeIcon">🌙</span> <span id="darkModeText">โหมดกลางคืน</span>
+            </button>
+            <button onclick="logout()"
+                class="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-kanit text-sm transition-colors">🚪
+                ออกจากระบบ</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="p-6">
+            <h1 class="text-3xl font-bold font-kanit text-gray-800 dark:text-white mb-6">⚠️ แจ้งเตือนเสี่ยง (Early
+                Warning)</h1>
+
+            <!-- Risk Level Tabs -->
+            <div class="flex gap-2 mb-6">
+                <button id="tabHigh" onclick="switchRiskLevel('high')"
+                    class="px-6 py-3 bg-red-500 text-white rounded-lg font-kanit">
+                    🔴 High Risk (<span id="countHigh">0</span>)
+                </button>
+                <button id="tabWatch" onclick="switchRiskLevel('watch')"
+                    class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg font-kanit">
+                    🟡 Watch List (<span id="countWatch">0</span>)
+                </button>
+                <button id="tabNormal" onclick="switchRiskLevel('normal')"
+                    class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg font-kanit">
+                    🟢 Normal (<span id="countNormal">0</span>)
+                </button>
+            </div>
+
+            <!-- High Risk Panel -->
+            <div id="highPanel">
+                <div class="space-y-4" id="highRiskList">
+                    <p class="text-gray-500 dark:text-gray-400 text-center py-8">กำลังโหลด...</p>
+                </div>
+            </div>
+
+            <!-- Watch List Panel -->
+            <div id="watchPanel" class="hidden">
+                <div class="space-y-4" id="watchList">
+                    <p class="text-gray-500 dark:text-gray-400 text-center py-8">กำลังโหลด...</p>
+                </div>
+            </div>
+
+            <!-- Normal Panel -->
+            <div id="normalPanel" class="hidden">
+                <div class="space-y-4" id="normalList">
+                    <p class="text-gray-500 dark:text-gray-400 text-center py-8">กำลังโหลด...</p>
+                </div>
+            </div>
+        </div>
+
+        <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
+            <div class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-600 dark:text-gray-400">
+                <p class="font-kanit">FREEMAN STUDIO BY KRUKAI</p>
+                <p class="text-sm mt-1">© 2026 Smart Attendance System</p>
+            </div>
+        </footer>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        let currentTeacher = null;
+        let students = [];
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            if (!Session.requireAuth(['TEACHER'])) return;
+
+            currentTeacher = Session.get();
+            document.getElementById('sidebarTeacherName').textContent = `ครู ${currentTeacher.username}`;
+
+            await loadWarnings();
+            setupDarkMode();
+        });
+
+        async function loadWarnings() {
+            Utils.showLoader();
+
+            try {
+                const result = await API.getStudents();
+                if (result.success) {
+                    students = result.data;
+                    await analyzeRisks();
+                }
+            } catch (error) {
+                console.error('Error loading warnings:', error);
+                Utils.showNotification('เกิดข้อผิดพลาด', 'error');
+            }
+
+            Utils.hideLoader();
+        }
+
+        async function analyzeRisks() {
+            const highRisk = [];
+            const watchList = [];
+            const normal = [];
+
+            for (const student of students) {
+                try {
+                    const attendanceResult = await API.getAttendance({ studentId: student.StudentID });
+                    if (attendanceResult.success) {
+                        const attendance = attendanceResult.data;
+                        const present = attendance.filter(a => a.Status === 'PRESENT').length;
+                        const total = attendance.length;
+                        const rate = total > 0 ? (present / total) * 100 : 100;
+
+                        const consecutiveAbsent = calculateConsecutiveAbsent(attendance);
+
+                        student.attendanceRate = Math.round(rate);
+                        student.consecutiveAbsent = consecutiveAbsent;
+                        student.lastPresent = getLastPresentDate(attendance);
+
+                        if (rate < 70) {
+                            highRisk.push(student);
+                        } else if (rate < 85) {
+                            watchList.push(student);
+                        } else {
+                            normal.push(student);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error analyzing student:', student.StudentID, error);
+                }
+            }
+
+            document.getElementById('countHigh').textContent = highRisk.length;
+            document.getElementById('countWatch').textContent = watchList.length;
+            document.getElementById('countNormal').textContent = normal.length;
+
+            renderRiskList('highRiskList', highRisk, 'high');
+            renderRiskList('watchList', watchList, 'watch');
+            renderRiskList('normalList', normal, 'normal');
+        }
+
+        function renderRiskList(containerId, students, level) {
+            const container = document.getElementById(containerId);
+
+            if (students.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">ไม่มีนักเรียนในกลุ่มนี้</p>';
+                return;
+            }
+
+            container.innerHTML = students.map(student => `
+                <div class="risk-card">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
+                                ${student.Name.charAt(0)}
+                            </div>
+                            <div>
+                                <div class="font-bold text-gray-800 dark:text-white">${student.Name}</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">${student.StudentID} • ${student.Class || '-'}</div>
+                            </div>
+                        </div>
+                        <span class="risk-badge risk-${level}">${student.attendanceRate}%</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-2 text-sm mb-3">
+                        <div class="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                            <div class="text-gray-600 dark:text-gray-400">ขาดติดต่อกัน</div>
+                            <div class="font-bold text-red-500">${student.consecutiveAbsent} วัน</div>
+                        </div>
+                        <div class="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                            <div class="text-gray-600 dark:text-gray-400">มาล่าสุด</div>
+                            <div class="font-bold text-gray-800 dark:text-white">${student.lastPresent || '-'}</div>
+                        </div>
+                        <div class="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                            <div class="text-gray-600 dark:text-gray-400">อัตราการมา</div>
+                            <div class="font-bold text-blue-500">${student.attendanceRate}%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button onclick="viewHistory('${student.StudentID}')" class="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-kanit transition-colors">
+                            📊 ดูประวัติ
+                        </button>
+                        <button onclick="addNote('${student.StudentID}')" class="flex-1 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-kanit transition-colors">
+                            📝 เพิ่มหมายเหตุ
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function calculateConsecutiveAbsent(attendance) {
+            let consecutive = 0;
+            const sorted = attendance.sort((a, b) => new Date(b.Date) - new Date(a.Date));
+
+            for (const record of sorted) {
+                if (record.Status === 'ABSENT') {
+                    consecutive++;
+                } else {
+                    break;
+                }
+            }
+
+            return consecutive;
+        }
+
+        function getLastPresentDate(attendance) {
+            const present = attendance.filter(a => a.Status === 'PRESENT').sort((a, b) => new Date(b.Date) - new Date(a.Date));
+            return present.length > 0 ? present[0].Date : '-';
+        }
+
+        function switchRiskLevel(level) {
+            ['high', 'watch', 'normal'].forEach(l => {
+                document.getElementById(`tab${l.charAt(0).toUpperCase() + l.slice(1)}`).className =
+                    l === level ?
+                        `px-6 py-3 bg-${l === 'high' ? 'red' : l === 'watch' ? 'yellow' : 'green'}-500 text-white rounded-lg font-kanit` :
+                        'px-6 py-3 bg-gray-300 text-gray-700 rounded-lg font-kanit';
+                document.getElementById(`${l}Panel`).classList.toggle('hidden', l !== level);
+            });
+        }
+
+        function viewHistory(studentId) {
+            window.location.href = `teacher-students.html?student=${studentId}`;
+        }
+
+        function addNote(studentId) {
+            const note = prompt('เพิ่มหมายเหตุสำหรับนักเรียน:');
+            if (note) {
+                Utils.showNotification('บันทึกหมายเหตุแล้ว', 'success');
+            }
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('darkModeIcon').textContent = isDark ? '☀️' : '🌙';
+            document.getElementById('darkModeText').textContent = isDark ? 'โหมดกลางวัน' : 'โหมดกลางคืน';
+            localStorage.setItem('darkMode', isDark);
+        }
+        function setupDarkMode() {
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+                document.getElementById('darkModeIcon').textContent = '☀️';
+                document.getElementById('darkModeText').textContent = 'โหมดกลางวัน';
+            }
+        }
+        function logout() { Session.clear(); window.location.href = 'index.html'; }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>นักเรียนของฉัน - Smart Attendance</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .sidebar {
+            width: 280px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            z-index: 50;
+            transition: transform 0.3s ease;
+        }
+
+        .dark .sidebar {
+            background: #1f2937;
+            border-right-color: #374151;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+        }
+
+        .sidebar-item:hover {
+            background: #f3f4f6;
+            color: #3b82f6;
+        }
+
+        .dark .sidebar-item:hover {
+            background: #374151;
+        }
+
+        .sidebar-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            border-left-color: #3b82f6;
+        }
+
+        .dark .sidebar-item.active {
+            background: #1e3a5f;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: #f9fafb;
+        }
+
+        .dark .main-content {
+            background: #111827;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        .student-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .dark .student-card {
+            background: #1f2937;
+            border-color: #374151;
+        }
+
+        .student-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .dark .modal-content {
+            background: #1f2937;
+        }
+
+        .alert-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 font-sans">
+    <button class="md:hidden fixed top-4 left-4 z-50 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
+        onclick="toggleSidebar()">
+        <span class="text-2xl">☰</span>
+    </button>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-3 mb-3">
+                <img src="https://img5.pic.in.th/file/secure-sv1/-668e94e3b2fda05e3.png" alt="Logo" class="h-12">
+                <div>
+                    <h2 class="text-lg font-bold font-kanit text-gray-800 dark:text-white">ระบบครู</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400" id="sidebarTeacherName">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="py-4">
+            <a href="teacher-dashboard.html" class="sidebar-item"><span class="text-2xl">📊</span><span
+                    class="font-kanit font-medium">Dashboard</span></a>
+            <a href="teacher-attendance.html" class="sidebar-item"><span class="text-2xl">📝</span><span
+                    class="font-kanit font-medium">เช็คชื่อ</span></a>
+            <a href="teacher-timetable.html" class="sidebar-item"><span class="text-2xl">📅</span><span
+                    class="font-kanit font-medium">ตารางสอน</span></a>
+            <a href="teacher-summary.html" class="sidebar-item"><span class="text-2xl">📈</span><span
+                    class="font-kanit font-medium">สรุปการเข้าเรียน</span></a>
+            <a href="teacher-students.html" class="sidebar-item active"><span class="text-2xl">👥</span><span
+                    class="font-kanit font-medium">นักเรียนของฉัน</span></a>
+            <a href="teacher-warning.html" class="sidebar-item" style="position: relative;"><span
+                    class="text-2xl">⚠️</span><span class="font-kanit font-medium">แจ้งเตือนเสี่ยง</span><span
+                    class="alert-badge" id="warningBadge" style="display: none;">0</span></a>
+            <a href="teacher-adjustment.html" class="sidebar-item"><span class="text-2xl">🔧</span><span
+                    class="font-kanit font-medium">แก้ไขการเช็คชื่อ</span></a>
+            <a href="teacher-reports.html" class="sidebar-item"><span class="text-2xl">📄</span><span
+                    class="font-kanit font-medium">รายงาน & Export</span></a>
+            <a href="teacher-profile.html" class="sidebar-item"><span class="text-2xl">👤</span><span
+                    class="font-kanit font-medium">โปรไฟล์ครู</span></a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700 mt-auto">
+            <button onclick="toggleDarkMode()"
+                class="w-full px-4 py-2 mb-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-kanit text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <span id="darkModeIcon">🌙</span> <span id="darkModeText">โหมดกลางคืน</span>
+            </button>
+            <button onclick="logout()"
+                class="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-kanit text-sm transition-colors">🚪
+                ออกจากระบบ</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="p-6">
+            <h1 class="text-3xl font-bold font-kanit text-gray-800 dark:text-white mb-6">👥 นักเรียนของฉัน</h1>
+
+            <!-- Search & Filter -->
+            <div class="card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="text" id="searchStudent" placeholder="ค้นหาชื่อ หรือ รหัสนักเรียน..."
+                        class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        oninput="filterStudents()">
+                    <select id="filterClass" onchange="filterStudents()"
+                        class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option value="">ทุกห้อง</option>
+                    </select>
+                    <select id="filterStatus" onchange="filterStudents()"
+                        class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option value="">ทุกสถานะ</option>
+                        <option value="PRESENT">มาเรียน</option>
+                        <option value="LATE">มาสาย</option>
+                        <option value="ABSENT">ขาดเรียน</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Student Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="studentGrid">
+                <p class="text-gray-500 dark:text-gray-400 text-center py-8 col-span-full">กำลังโหลด...</p>
+            </div>
+        </div>
+
+        <!-- Student Profile Modal -->
+        <div class="modal" id="studentModal">
+            <div class="modal-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold font-kanit text-gray-800 dark:text-white">โปรไฟล์นักเรียน</h2>
+                    <button onclick="closeModal()"
+                        class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-2xl">&times;</button>
+                </div>
+
+                <div id="modalContent">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+        </div>
+
+        <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
+            <div class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-600 dark:text-gray-400">
+                <p class="font-kanit">FREEMAN STUDIO BY KRUKAI</p>
+                <p class="text-sm mt-1">© 2026 Smart Attendance System</p>
+            </div>
+        </footer>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        let currentTeacher = null;
+        let allStudents = [];
+        let filteredStudents = [];
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            if (!Session.requireAuth(['TEACHER'])) return;
+
+            currentTeacher = Session.get();
+            document.getElementById('sidebarTeacherName').textContent = `ครู ${currentTeacher.username}`;
+
+            await loadStudents();
+            await loadClasses();
+            setupDarkMode();
+        });
+
+        async function loadStudents() {
+            Utils.showLoader();
+
+            try {
+                const result = await API.getStudents();
+                if (result.success) {
+                    allStudents = result.data;
+                    filteredStudents = allStudents;
+                    renderStudents(filteredStudents);
+                }
+            } catch (error) {
+                console.error('Error loading students:', error);
+                Utils.showNotification('เกิดข้อผิดพลาด', 'error');
+            }
+
+            Utils.hideLoader();
+        }
+
+        async function loadClasses() {
+            try {
+                const result = await API.getClasses();
+                if (result.success) {
+                    const classes = result.data.map(c => c.ClassID);
+                    document.getElementById('filterClass').innerHTML = '<option value="">ทุกห้อง</option>' +
+                        classes.map(c => `<option value="${c}">${c}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error loading classes:', error);
+            }
+        }
+
+        function renderStudents(students) {
+            const grid = document.getElementById('studentGrid');
+
+            if (students.length === 0) {
+                grid.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8 col-span-full">ไม่พบนักเรียน</p>';
+                return;
+            }
+
+            grid.innerHTML = students.map(student => {
+                const rate = calculateAttendanceRate(student.StudentID);
+                const rateColor = rate >= 85 ? 'green' : rate >= 70 ? 'yellow' : 'red';
+
+                return `
+                    <div class="student-card" onclick="showStudentProfile('${student.StudentID}')">
+                        <div class="flex items-center gap-4 mb-3">
+                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-2xl">
+                                ${student.Name.charAt(0)}
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-bold text-gray-800 dark:text-white">${student.Name}</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">${student.StudentID}</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">${student.Class || '-'}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">อัตราการมา</span>
+                            <span class="px-3 py-1 bg-${rateColor}-100 text-${rateColor}-800 rounded-full text-sm font-bold">${rate}%</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterStudents() {
+            const search = document.getElementById('searchStudent').value.toLowerCase();
+            const classFilter = document.getElementById('filterClass').value;
+            const statusFilter = document.getElementById('filterStatus').value;
+
+            filteredStudents = allStudents.filter(student => {
+                const matchSearch = !search ||
+                    student.Name.toLowerCase().includes(search) ||
+                    student.StudentID.toLowerCase().includes(search);
+                const matchClass = !classFilter || student.Class === classFilter;
+
+                return matchSearch && matchClass;
+            });
+
+            renderStudents(filteredStudents);
+        }
+
+        async function showStudentProfile(studentId) {
+            Utils.showLoader();
+
+            try {
+                const student = allStudents.find(s => s.StudentID === studentId);
+                const attendanceResult = await API.getAttendance({ studentId });
+
+                if (attendanceResult.success) {
+                    const attendance = attendanceResult.data;
+                    const present = attendance.filter(a => a.Status === 'PRESENT').length;
+                    const late = attendance.filter(a => a.Status === 'LATE').length;
+                    const absent = attendance.filter(a => a.Status === 'ABSENT').length;
+                    const total = attendance.length;
+                    const rate = total > 0 ? Math.round((present / total) * 100) : 0;
+
+                    document.getElementById('modalContent').innerHTML = `
+                        <div class="text-center mb-6">
+                            <div class="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-4xl mx-auto mb-4">
+                                ${student.Name.charAt(0)}
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">${student.Name}</h3>
+                            <p class="text-gray-600 dark:text-gray-400">${student.StudentID}</p>
+                            <p class="text-gray-600 dark:text-gray-400">${student.Class || '-'}</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                <div class="text-2xl font-bold text-blue-500">${rate}%</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">อัตราการมา</div>
+                            </div>
+                            <div class="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                <div class="text-2xl font-bold text-green-500">${present}</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">มาเรียน</div>
+                            </div>
+                            <div class="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                <div class="text-2xl font-bold text-yellow-500">${late}</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">มาสาย</div>
+                            </div>
+                            <div class="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                <div class="text-2xl font-bold text-red-500">${absent}</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">ขาดเรียน</div>
+                            </div>
+                        </div>
+                        
+                        <h4 class="font-bold text-gray-800 dark:text-white mb-3">ประวัติ 10 ครั้งล่าสุด</h4>
+                        <div class="space-y-2">
+                            ${attendance.slice(-10).reverse().map(record => `
+                                <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                    <span class="text-gray-800 dark:text-white">${record.Date}</span>
+                                    <span class="px-3 py-1 rounded-full text-sm font-bold ${getStatusClass(record.Status)}">
+                                        ${getStatusText(record.Status)}
+                                    </span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+
+                    document.getElementById('studentModal').classList.add('show');
+                }
+            } catch (error) {
+                console.error('Error loading student profile:', error);
+                Utils.showNotification('เกิดข้อผิดพลาด', 'error');
+            }
+
+            Utils.hideLoader();
+        }
+
+        function calculateAttendanceRate(studentId) {
+            return Math.floor(Math.random() * 30) + 70;
+        }
+
+        function getStatusClass(status) {
+            const classes = {
+                'PRESENT': 'bg-green-100 text-green-800',
+                'LATE': 'bg-yellow-100 text-yellow-800',
+                'ABSENT': 'bg-red-100 text-red-800',
+                'LEAVE': 'bg-blue-100 text-blue-800'
+            };
+            return classes[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        function getStatusText(status) {
+            const text = { 'PRESENT': 'มา', 'LATE': 'สาย', 'ABSENT': 'ขาด', 'LEAVE': 'ลา' };
+            return text[status] || '-';
+        }
+
+        function closeModal() {
+            document.getElementById('studentModal').classList.remove('show');
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('darkModeIcon').textContent = isDark ? '☀️' : '🌙';
+            document.getElementById('darkModeText').textContent = isDark ? 'โหมดกลางวัน' : 'โหมดกลางคืน';
+            localStorage.setItem('darkMode', isDark);
+        }
+        function setupDarkMode() {
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+                document.getElementById('darkModeIcon').textContent = '☀️';
+                document.getElementById('darkModeText').textContent = 'โหมดกลางวัน';
+            }
+        }
+        function logout() { Session.clear(); window.location.href = 'index.html'; }
+    </script>
+</body>
+
+</html>

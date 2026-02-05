@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สำรองและกู้คืนข้อมูล - Smart Attendance</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .sidebar {
+            width: 280px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            z-index: 50;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+        }
+
+        .sidebar-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            border-left-color: #3b82f6;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: #f9fafb;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <aside class="sidebar">
+        <div class="p-6 border-b">
+            <h2 class="text-lg font-bold font-kanit">Admin Panel</h2>
+        </div>
+        <nav class="py-4">
+            <a href="admin-dashboard.html" class="sidebar-item"><span>📊</span><span
+                    class="font-kanit">Dashboard</span></a>
+            <a href="admin-academic-year.html" class="sidebar-item"><span>📅</span><span
+                    class="font-kanit">ปีการศึกษา</span></a>
+            <a href="admin-students.html" class="sidebar-item"><span>👥</span><span
+                    class="font-kanit">นักเรียน</span></a>
+            <a href="admin-teachers.html" class="sidebar-item"><span>👨‍🏫</span><span class="font-kanit">ครู</span></a>
+            <a href="admin-users.html" class="sidebar-item"><span>🔐</span><span class="font-kanit">ผู้ใช้ &
+                    สิทธิ์</span></a>
+            <a href="admin-classes.html" class="sidebar-item"><span>🏫</span><span
+                    class="font-kanit">ชั้นเรียน</span></a>
+            <a href="admin-subjects.html" class="sidebar-item"><span>📚</span><span
+                    class="font-kanit">รายวิชา</span></a>
+            <a href="admin-timetable.html" class="sidebar-item"><span>🗓️</span><span
+                    class="font-kanit">ตารางเรียน</span></a>
+            <a href="admin-attendance.html" class="sidebar-item"><span>📊</span><span
+                    class="font-kanit">ข้อมูลการเข้าเรียน</span></a>
+            <a href="admin-warnings.html" class="sidebar-item"><span>⚠️</span><span
+                    class="font-kanit">แจ้งเตือน</span></a>
+            <a href="admin-reports.html" class="sidebar-item"><span>📄</span><span class="font-kanit">รายงาน</span></a>
+            <a href="admin-logs.html" class="sidebar-item"><span>📜</span><span class="font-kanit">Logs</span></a>
+            <a href="admin-settings.html" class="sidebar-item"><span>⚙️</span><span
+                    class="font-kanit">ตั้งค่า</span></a>
+            <a href="admin-backup.html" class="sidebar-item active"><span>💾</span><span
+                    class="font-kanit">สำรอง</span></a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="p-6">
+            <h1 class="text-3xl font-bold font-kanit mb-6">💾 สำรองและกู้คืนข้อมูล</h1>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Create Backup -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-bold font-kanit mb-4">📦 สร้างไฟล์สำรอง</h2>
+
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600 mb-4">เลือกข้อมูลที่ต้องการสำรอง:</p>
+
+                        <div class="space-y-2">
+                            <label
+                                class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                <input type="checkbox" id="backupStudents" checked class="backup-checkbox">
+                                <span>👥 นักเรียน (<span id="studentsCount">0</span> คน)</span>
+                            </label>
+
+                            <label
+                                class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                <input type="checkbox" id="backupTeachers" checked class="backup-checkbox">
+                                <span>👨‍🏫 ครู (<span id="teachersCount">0</span> คน)</span>
+                            </label>
+
+                            <label
+                                class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                <input type="checkbox" id="backupClasses" checked class="backup-checkbox">
+                                <span>🏫 ชั้นเรียน (<span id="classesCount">0</span> ห้อง)</span>
+                            </label>
+
+                            <label
+                                class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                <input type="checkbox" id="backupSubjects" checked class="backup-checkbox">
+                                <span>📚 รายวิชา (<span id="subjectsCount">0</span> วิชา)</span>
+                            </label>
+
+                            <label
+                                class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                <input type="checkbox" id="backupAttendance" checked class="backup-checkbox">
+                                <span>📊 ข้อมูลการเข้าเรียน (<span id="attendanceCount">0</span> รายการ)</span>
+                            </label>
+
+                            <label
+                                class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                <input type="checkbox" id="backupTimetable" checked class="backup-checkbox">
+                                <span>🗓️ ตารางเรียน</span>
+                            </label>
+
+                            <label
+                                class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                <input type="checkbox" id="backupSettings" checked class="backup-checkbox">
+                                <span>⚙️ การตั้งค่า</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium mb-2">ช่วงเวลาข้อมูล Attendance:</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="date" id="backupDateStart" class="px-4 py-2 rounded-lg border">
+                            <input type="date" id="backupDateEnd" class="px-4 py-2 rounded-lg border">
+                        </div>
+                    </div>
+
+                    <button onclick="createBackup()"
+                        class="w-full px-6 py-3 bg-blue-500 text-white rounded-lg font-kanit font-bold">
+                        💾 สร้างไฟล์สำรอง
+                    </button>
+                </div>
+
+                <!-- Restore Backup -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-bold font-kanit mb-4">♻️ กู้คืนข้อมูล</h2>
+
+                    <div class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p class="text-sm text-yellow-800">⚠️ <strong>คำเตือน:</strong>
+                            การกู้คืนข้อมูลจะแทนที่ข้อมูลปัจจุบัน กรุณาสร้างไฟล์สำรองก่อนทำการกู้คืน</p>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium mb-2">เลือกไฟล์สำรอง (JSON):</label>
+                        <input type="file" id="restoreFile" accept=".json" class="w-full px-4 py-2 rounded-lg border">
+                    </div>
+
+                    <div class="mb-6" id="restorePreview" style="display: none;">
+                        <h3 class="font-bold mb-2">ข้อมูลในไฟล์สำรอง:</h3>
+                        <div class="text-sm space-y-1" id="restorePreviewContent"></div>
+                    </div>
+
+                    <button onclick="restoreBackup()"
+                        class="w-full px-6 py-3 bg-green-500 text-white rounded-lg font-kanit font-bold">
+                        ♻️ กู้คืนข้อมูล
+                    </button>
+                </div>
+            </div>
+
+            <!-- Backup History -->
+            <div class="bg-white p-6 rounded-lg shadow-md mt-6">
+                <h2 class="text-xl font-bold font-kanit mb-4">📜 ประวัติการสำรอง</h2>
+
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="text-left py-3 px-4 font-kanit">วันที่สร้าง</th>
+                            <th class="text-left py-3 px-4 font-kanit">ผู้สร้าง</th>
+                            <th class="text-left py-3 px-4 font-kanit">ข้อมูลที่สำรอง</th>
+                            <th class="text-center py-3 px-4 font-kanit">ขนาด</th>
+                            <th class="text-center py-3 px-4 font-kanit">การดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTable">
+                        <tr>
+                            <td colspan="5" class="text-center py-8 text-gray-500">ไม่มีประวัติการสำรอง</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Auto Backup Settings -->
+            <div class="bg-white p-6 rounded-lg shadow-md mt-6">
+                <h2 class="text-xl font-bold font-kanit mb-4">🔄 สำรองอัตโนมัติ</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="flex items-center gap-2 mb-4">
+                            <input type="checkbox" id="enableAutoBackup">
+                            <span>เปิดใช้การสำรองข้อมูลอัตโนมัติ</span>
+                        </label>
+
+                        <div id="autoBackupSettings" style="display: none;">
+                            <label class="block text-sm font-medium mb-2">ความถี่:</label>
+                            <select id="autoBackupFrequency" class="w-full px-4 py-2 rounded-lg border mb-4">
+                                <option value="daily">รายวัน (เที่ยงคืน)</option>
+                                <option value="weekly">รายสัปดาห์ (วันอาทิตย์)</option>
+                                <option value="monthly">รายเดือน (วันที่ 1)</option>
+                            </select>
+
+                            <label class="block text-sm font-medium mb-2">เก็บไฟล์สำรอง:</label>
+                            <select id="autoBackupRetention" class="w-full px-4 py-2 rounded-lg border">
+                                <option value="7">7 ไฟล์ล่าสุด</option>
+                                <option value="14">14 ไฟล์ล่าสุด</option>
+                                <option value="30">30 ไฟล์ล่าสุด</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-blue-50 rounded-lg">
+                        <h3 class="font-bold mb-2">💡 คำแนะนำ:</h3>
+                        <ul class="text-sm space-y-1 text-gray-700">
+                            <li>• สำรองข้อมูลก่อนทำการเปลี่ยนแปลงสำคัญ</li>
+                            <li>• เก็บไฟล์สำรองไว้บน Google Drive หรือ Cloud</li>
+                            <li>• ตรวจสอบไฟล์สำรองเป็นประจำ</li>
+                            <li>• ทดสอบการกู้คืนข้อมูลอย่างน้อย 1 ครั้ง/เดือน</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <button onclick="saveAutoBackupSettings()"
+                    class="mt-4 px-6 py-3 bg-blue-500 text-white rounded-lg font-kanit">
+                    💾 บันทึกการตั้งค่า
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        let backupData = null;
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            if (!Session.requireAuth(['ADMIN'])) return;
+            await loadCounts();
+            await loadHistory();
+
+            document.getElementById('enableAutoBackup').addEventListener('change', function () {
+                document.getElementById('autoBackupSettings').style.display = this.checked ? 'block' : 'none';
+            });
+
+            document.getElementById('restoreFile').addEventListener('change', handleFileSelect);
+        });
+
+        async function loadCounts() {
+            try {
+                const [students, teachers, classes, subjects, attendance] = await Promise.all([
+                    API.getStudents(),
+                    API.getTeachers(),
+                    API.getClasses(),
+                    API.getSubjects(),
+                    API.getAttendance({})
+                ]);
+
+                if (students.success) document.getElementById('studentsCount').textContent = students.data.length;
+                if (teachers.success) document.getElementById('teachersCount').textContent = teachers.data.length;
+                if (classes.success) document.getElementById('classesCount').textContent = classes.data.length;
+                if (subjects.success) document.getElementById('subjectsCount').textContent = subjects.data.length;
+                if (attendance.success) document.getElementById('attendanceCount').textContent = attendance.data.length;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadHistory() {
+            try {
+                const result = await API.getBackupHistory();
+                if (result.success) {
+                    renderHistory(result.data);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function renderHistory(history) {
+            const tbody = document.getElementById('historyTable');
+            if (history.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">ไม่มีประวัติการสำรอง</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = history.map(h => `
+                <tr class="border-b">
+                    <td class="py-3 px-4">${h.Date}</td>
+                    <td class="py-3 px-4">${h.CreatedBy}</td>
+                    <td class="py-3 px-4">${h.Tables.join(', ')}</td>
+                    <td class="text-center py-3 px-4">${h.Size} KB</td>
+                    <td class="text-center py-3 px-4">
+                        <button onclick="downloadBackup('${h.ID}')" class="px-3 py-1 bg-blue-500 text-white rounded text-sm">⬇️ ดาวน์โหลด</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function createBackup() {
+            const tables = [];
+            if (document.getElementById('backupStudents').checked) tables.push('Students');
+            if (document.getElementById('backupTeachers').checked) tables.push('Teachers');
+            if (document.getElementById('backupClasses').checked) tables.push('Classes');
+            if (document.getElementById('backupSubjects').checked) tables.push('Subjects');
+            if (document.getElementById('backupAttendance').checked) tables.push('Attendance');
+            if (document.getElementById('backupTimetable').checked) tables.push('Timetable');
+            if (document.getElementById('backupSettings').checked) tables.push('Settings');
+
+            if (tables.length === 0) {
+                Utils.showNotification('กรุณาเลือกข้อมูลที่ต้องการสำรอง', 'error');
+                return;
+            }
+
+            Utils.showLoader();
+            try {
+                const result = await API.createBackup({
+                    tables,
+                    dateStart: document.getElementById('backupDateStart').value,
+                    dateEnd: document.getElementById('backupDateEnd').value
+                });
+
+                if (result.success) {
+                    backupData = result.data;
+
+                    // Download as JSON
+                    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
+                    a.click();
+
+                    Utils.showNotification('สร้างไฟล์สำรองสำเร็จ', 'success');
+                    await loadHistory();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    backupData = JSON.parse(e.target.result);
+
+                    const preview = document.getElementById('restorePreview');
+                    const content = document.getElementById('restorePreviewContent');
+
+                    let html = '';
+                    for (const table in backupData) {
+                        if (Array.isArray(backupData[table])) {
+                            html += `<div>✅ ${table}: ${backupData[table].length} รายการ</div>`;
+                        }
+                    }
+
+                    content.innerHTML = html;
+                    preview.style.display = 'block';
+                } catch (error) {
+                    Utils.showNotification('ไฟล์ไม่ถูกต้อง', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        async function restoreBackup() {
+            if (!backupData) {
+                Utils.showNotification('กรุณาเลือกไฟล์สำรองก่อน', 'error');
+                return;
+            }
+
+            const confirmation = prompt('พิมพ์ "RESTORE" เพื่อยืนยันการกู้คืนข้อมูล (ข้อมูลเดิมจะถูกแทนที่)');
+            if (confirmation !== 'RESTORE') return;
+
+            Utils.showLoader();
+            try {
+                const result = await API.restoreBackup(backupData);
+                if (result.success) {
+                    Utils.showNotification('กู้คืนข้อมูลสำเร็จ กรุณารีเฟรชหน้า', 'success');
+                    setTimeout(() => window.location.reload(), 2000);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        async function downloadBackup(id) {
+            Utils.showLoader();
+            try {
+                const result = await API.getBackupFile(id);
+                if (result.success) {
+                    const blob = new Blob([JSON.stringify(result.data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `backup_${id}.json`;
+                    a.click();
+                    Utils.showNotification('ดาวน์โหลดสำเร็จ', 'success');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        async function saveAutoBackupSettings() {
+            const data = {
+                enabled: document.getElementById('enableAutoBackup').checked,
+                frequency: document.getElementById('autoBackupFrequency').value,
+                retention: document.getElementById('autoBackupRetention').value
+            };
+
+            Utils.showLoader();
+            try {
+                const result = await API.saveSettings({ type: 'autoBackup', data });
+                if (result.success) {
+                    Utils.showNotification('บันทึกการตั้งค่าสำเร็จ', 'success');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            Utils.hideLoader();
+        }
+
+        function logout() { Session.clear(); window.location.href = 'index.html'; }
+    </script>
+</body>
+
+</html>

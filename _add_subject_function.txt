@@ -1,0 +1,3 @@
+function showAddSubjectModal() {
+    Utils.showNotification('เพื่อเพิ่มรายวิชา กรุณาเพิ่มข้อมูลใน Google Sheets (Subjects sheet)', 'info');
+}

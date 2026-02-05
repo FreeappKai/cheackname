@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายงาน & Export - Smart Attendance</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .sidebar {
+            width: 280px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            z-index: 50;
+            transition: transform 0.3s ease;
+        }
+
+        .dark .sidebar {
+            background: #1f2937;
+            border-right-color: #374151;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+        }
+
+        .sidebar-item:hover {
+            background: #f3f4f6;
+            color: #3b82f6;
+        }
+
+        .dark .sidebar-item:hover {
+            background: #374151;
+        }
+
+        .sidebar-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            border-left-color: #3b82f6;
+        }
+
+        .dark .sidebar-item.active {
+            background: #1e3a5f;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: #f9fafb;
+        }
+
+        .dark .main-content {
+            background: #111827;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        .report-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dark .report-card {
+            background: #1f2937;
+            border-color: #374151;
+        }
+
+        .report-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+
+        .alert-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 font-sans">
+    <button class="md:hidden fixed top-4 left-4 z-50 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
+        onclick="toggleSidebar()"><span class="text-2xl">☰</span></button>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-3 mb-3">
+                <img src="https://img5.pic.in.th/file/secure-sv1/-668e94e3b2fda05e3.png" alt="Logo" class="h-12">
+                <div>
+                    <h2 class="text-lg font-bold font-kanit text-gray-800 dark:text-white">ระบบครู</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400" id="sidebarTeacherName">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="py-4">
+            <a href="teacher-dashboard.html" class="sidebar-item"><span class="text-2xl">📊</span><span
+                    class="font-kanit font-medium">Dashboard</span></a>
+            <a href="teacher-attendance.html" class="sidebar-item"><span class="text-2xl">📝</span><span
+                    class="font-kanit font-medium">เช็คชื่อ</span></a>
+            <a href="teacher-timetable.html" class="sidebar-item"><span class="text-2xl">📅</span><span
+                    class="font-kanit font-medium">ตารางสอน</span></a>
+            <a href="teacher-summary.html" class="sidebar-item"><span class="text-2xl">📈</span><span
+                    class="font-kanit font-medium">สรุปการเข้าเรียน</span></a>
+            <a href="teacher-students.html" class="sidebar-item"><span class="text-2xl">👥</span><span
+                    class="font-kanit font-medium">นักเรียนของฉัน</span></a>
+            <a href="teacher-warning.html" class="sidebar-item" style="position: relative;"><span
+                    class="text-2xl">⚠️</span><span class="font-kanit font-medium">แจ้งเตือนเสี่ยง</span><span
+                    class="alert-badge" id="warningBadge" style="display: none;">0</span></a>
+            <a href="teacher-adjustment.html" class="sidebar-item"><span class="text-2xl">🔧</span><span
+                    class="font-kanit font-medium">แก้ไขการเช็คชื่อ</span></a>
+            <a href="teacher-reports.html" class="sidebar-item active"><span class="text-2xl">📄</span><span
+                    class="font-kanit font-medium">รายงาน & Export</span></a>
+            <a href="teacher-profile.html" class="sidebar-item"><span class="text-2xl">👤</span><span
+                    class="font-kanit font-medium">โปรไฟล์ครู</span></a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700 mt-auto">
+            <button onclick="toggleDarkMode()"
+                class="w-full px-4 py-2 mb-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-kanit text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <span id="darkModeIcon">🌙</span> <span id="darkModeText">โหมดกลางคืน</span>
+            </button>
+            <button onclick="logout()"
+                class="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-kanit text-sm transition-colors">🚪
+                ออกจากระบบ</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="p-6">
+            <h1 class="text-3xl font-bold font-kanit text-gray-800 dark:text-white mb-6">📄 รายงาน & Export</h1>
+
+            <!-- Report Types -->
+            <div class="mb-8">
+                <h2 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-4">เลือกประเภทรายงาน</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="report-card" onclick="selectReport('daily')">
+                        <div class="text-4xl mb-3">📅</div>
+                        <h3 class="text-lg font-bold font-kanit text-gray-800 dark:text-white mb-2">รายงานรายวัน</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">สรุปการเข้าเรียนประจำวัน</p>
+                    </div>
+                    <div class="report-card" onclick="selectReport('weekly')">
+                        <div class="text-4xl mb-3">📊</div>
+                        <h3 class="text-lg font-bold font-kanit text-gray-800 dark:text-white mb-2">สรุปรายสัปดาห์</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">สถิติการเข้าเรียน 7 วัน</p>
+                    </div>
+                    <div class="report-card" onclick="selectReport('monthly')">
+                        <div class="text-4xl mb-3">📈</div>
+                        <h3 class="text-lg font-bold font-kanit text-gray-800 dark:text-white mb-2">สถิติรายเดือน</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">ภาพรวมทั้งเดือน</p>
+                    </div>
+                    <div class="report-card" onclick="selectReport('semester')">
+                        <div class="text-4xl mb-3">🎓</div>
+                        <h3 class="text-lg font-bold font-kanit text-gray-800 dark:text-white mb-2">ภาคเรียน</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">สรุปภาคเรียนทั้งภาค</p>
+                    </div>
+                    <div class="report-card" onclick="selectReport('student')">
+                        <div class="text-4xl mb-3">👤</div>
+                        <h3 class="text-lg font-bold font-kanit text-gray-800 dark:text-white mb-2">รายงานนักเรียน</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">ข้อมูลรายบุคคล</p>
+                    </div>
+                    <div class="report-card" onclick="selectReport('class')">
+                        <div class="text-4xl mb-3">📋</div>
+                        <h3 class="text-lg font-bold font-kanit text-gray-800 dark:text-white mb-2">ผลการเรียนห้อง</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">เปรียบเทียบห้องเรียน</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+                <h2 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-4">ตัวกรอง</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <select id="filterSubject"
+                        class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option value="">ทุกวิชา</option>
+                    </select>
+                    <select id="filterClass"
+                        class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option value="">ทุกห้อง</option>
+                    </select>
+                    <input type="date" id="filterStartDate"
+                        class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <input type="date" id="filterEndDate"
+                        class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                </div>
+            </div>
+
+            <!-- Export Buttons -->
+            <div class="card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+                <h2 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-4">ส่งออกข้อมูล</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button onclick="exportPDF()"
+                        class="p-6 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-lg hover:shadow-xl transition-all transform hover:scale-105">
+                        <div class="text-4xl mb-2">📄</div>
+                        <div class="font-bold font-kanit">Export PDF</div>
+                        <div class="text-sm opacity-80">ไฟล์พร้อมพิมพ์</div>
+                    </button>
+                    <button onclick="exportExcel()"
+                        class="p-6 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg hover:shadow-xl transition-all transform hover:scale-105">
+                        <div class="text-4xl mb-2">📊</div>
+                        <div class="font-bold font-kanit">Export Excel</div>
+                        <div class="text-sm opacity-80">พร้อมสูตร</div>
+                    </button>
+                    <button onclick="exportCSV()"
+                        class="p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-xl transition-all transform hover:scale-105">
+                        <div class="text-4xl mb-2">📋</div>
+                        <div class="font-bold font-kanit">Export CSV</div>
+                        <div class="text-sm opacity-80">ข้อมูลดิบ</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Preview -->
+            <div class="card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-bold font-kanit text-gray-800 dark:text-white mb-4">ตัวอย่างรายงาน</h2>
+                <div id="previewArea" class="text-center py-12 text-gray-500 dark:text-gray-400">
+                    เลือกประเภทรายงานเพื่อดูตัวอย่าง
+                </div>
+            </div>
+        </div>
+
+        <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
+            <div class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-600 dark:text-gray-400">
+                <p class="font-kanit">FREEMAN STUDIO BY KRUKAI</p>
+                <p class="text-sm mt-1">© 2026 Smart Attendance System</p>
+            </div>
+        </footer>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        let currentTeacher = null;
+        let selectedReportType = null;
+        let reportData = null;
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            if (!Session.requireAuth(['TEACHER'])) return;
+
+            currentTeacher = Session.get();
+            document.getElementById('sidebarTeacherName').textContent = `ครู ${currentTeacher.username}`;
+
+            await loadFilters();
+            setupDarkMode();
+            setDefaultDates();
+        });
+
+        function setDefaultDates() {
+            const today = new Date();
+            const oneMonthAgo = new Date(today);
+            oneMonthAgo.setMonth(today.getMonth() - 1);
+
+            document.getElementById('filterStartDate').valueAsDate = oneMonthAgo;
+            document.getElementById('filterEndDate').valueAsDate = today;
+        }
+
+        async function loadFilters() {
+            try {
+                const timetable = await API.getTimetable(currentTeacher.linkedId || currentTeacher.userId);
+                if (timetable.success) {
+                    const subjects = [...new Set(timetable.data.map(t => t.SubjectID))];
+                    const classes = [...new Set(timetable.data.map(t => t.ClassID))];
+
+                    document.getElementById('filterSubject').innerHTML = '<option value="">ทุกวิชา</option>' +
+                        subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+                    document.getElementById('filterClass').innerHTML = '<option value="">ทุกห้อง</option>' +
+                        classes.map(c => `<option value="${c}">${c}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error loading filters:', error);
+            }
+        }
+
+        async function selectReport(type) {
+            selectedReportType = type;
+            Utils.showLoader();
+
+            const subject = document.getElementById('filterSubject').value;
+            const classId = document.getElementById('filterClass').value;
+            const startDate = document.getElementById('filterStartDate').value;
+            const endDate = document.getElementById('filterEndDate').value;
+
+            try {
+                const result = await API.getAttendance({
+                    teacherId: currentTeacher.linkedId || currentTeacher.userId,
+                    subject, class: classId, startDate, endDate
+                });
+
+                if (result.success) {
+                    reportData = result.data;
+                    showPreview(type);
+                }
+            } catch (error) {
+                console.error('Error loading report:', error);
+                Utils.showNotification('เกิดข้อผิดพลาด', 'error');
+            }
+
+            Utils.hideLoader();
+        }
+
+        function showPreview(type) {
+            const preview = document.getElementById('previewArea');
+            const titles = {
+                daily: 'รายงานรายวัน',
+                weekly: 'สรุปรายสัปดาห์',
+                monthly: 'สถิติรายเดือน',
+                semester: 'สรุปภาคเรียน',
+                student: 'รายงานนักเรียน',
+                class: 'ผลการเรียนห้อง'
+            };
+
+            const present = reportData.filter(d => d.Status === 'PRESENT').length;
+            const late = reportData.filter(d => d.Status === 'LATE').length;
+            const absent = reportData.filter(d => d.Status === 'ABSENT').length;
+            const total = reportData.length;
+            const rate = total > 0 ? Math.round((present / total) * 100) : 0;
+
+            preview.innerHTML = `
+                <div class="text-left">
+                    <h3 class="text-2xl font-bold font-kanit text-gray-800 dark:text-white mb-6">${titles[type]}</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div class="text-center p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
+                            <div class="text-3xl font-bold text-blue-500">${rate}%</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">อัตราการมา</div>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 dark:bg-green-900 rounded-lg">
+                            <div class="text-3xl font-bold text-green-500">${present}</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">มาเรียน</div>
+                        </div>
+                        <div class="text-center p-4 bg-yellow-50 dark:bg-yellow-900 rounded-lg">
+                            <div class="text-3xl font-bold text-yellow-500">${late}</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">มาสาย</div>
+                        </div>
+                        <div class="text-center p-4 bg-red-50 dark:bg-red-900 rounded-lg">
+                            <div class="text-3xl font-bold text-red-500">${absent}</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">ขาดเรียน</div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 dark:text-gray-400">คลิกปุ่ม Export เพื่อดาวน์โหลดรายงาน</p>
+                </div>
+            `;
+        }
+
+        async function exportPDF() {
+            if (!reportData) {
+                Utils.showNotification('กรุณาเลือกประเภทรายงานก่อน', 'error');
+                return;
+            }
+
+            Utils.showNotification('กำลังสร้าง PDF...', 'info');
+
+            setTimeout(() => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                doc.text('Attendance Report', 20, 20);
+                doc.text(`Total Records: ${reportData.length}`, 20, 30);
+                doc.text(`Generated: ${new Date().toLocaleDateString('th-TH')}`, 20, 40);
+
+                doc.save('attendance-report.pdf');
+                Utils.showNotification('ดาวน์โหลด PDF สำเร็จ!', 'success');
+            }, 1000);
+        }
+
+        async function exportExcel() {
+            if (!reportData) {
+                Utils.showNotification('กรุณาเลือกประเภทรายงานก่อน', 'error');
+                return;
+            }
+
+            Utils.showNotification('กำลังสร้าง Excel...', 'info');
+
+            const ws = XLSX.utils.json_to_sheet(reportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+
+            XLSX.writeFile(wb, 'attendance-report.xlsx');
+            Utils.showNotification('ดาวน์โหลด Excel สำเร็จ!', 'success');
+        }
+
+        async function exportCSV() {
+            if (!reportData) {
+                Utils.showNotification('กรุณาเลือกประเภทรายงานก่อน', 'error');
+                return;
+            }
+
+            const csv = [
+                Object.keys(reportData[0]).join(','),
+                ...reportData.map(row => Object.values(row).join(','))
+            ].join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'attendance-report.csv';
+            a.click();
+
+            Utils.showNotification('ดาวน์โหลด CSV สำเร็จ!', 'success');
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('darkModeIcon').textContent = isDark ? '☀️' : '🌙';
+            document.getElementById('darkModeText').textContent = isDark ? 'โหมดกลางวัน' : 'โหมดกลางคืน';
+            localStorage.setItem('darkMode', isDark);
+        }
+        function setupDarkMode() {
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+                document.getElementById('darkModeIcon').textContent = '☀️';
+                document.getElementById('darkModeText').textContent = 'โหมดกลางวัน';
+            }
+        }
+        function logout() { Session.clear(); window.location.href = 'index.html'; }
+    </script>
+</body>
+
+</html>
