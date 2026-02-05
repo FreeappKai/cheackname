@@ -328,23 +328,32 @@
             }
 
             tbody.innerHTML = academicYears.map(year => {
-                // Normalize property names (handle both Year/year, IsActive/isActive, etc.)
-                const yearId = year.Year || year.year;
-                const sem1Status = year.Sem1Status || year.sem1Status;
-                const sem2Status = year.Sem2Status || year.sem2Status;
-                const isActive = year.IsActive !== undefined ? year.IsActive : year.isActive;
+                // Determine year display (handle inconsistencies)
+                const yearId = year.YearID; // Use unique ID for actions
+                const yearName = year.YearName || year.Year || year.year;
+
+                // Determine dates
+                const sem1Start = year.Sem1Start || year.Sem1StartDate || '-';
+                const sem1End = year.Sem1End || year.Sem1EndDate || '-';
+                const sem2Start = year.Sem2Start || year.Sem2StartDate || '-';
+                const sem2End = year.Sem2End || year.Sem2EndDate || '-';
+
+                // Determine statuses
+                const sem1Status = year.Semester1 || year.Sem1Status || 'INACTIVE';
+                const sem2Status = year.Semester2 || year.Sem2Status || 'INACTIVE';
+                const isActive = (year.IsActive === 'YES' || year.IsActive === true);
 
                 return `
                 <tr class="border-b border-gray-100 dark:border-gray-700">
-                    <td class="py-4 px-6 font-bold text-gray-800 dark:text-white">${yearId}</td>
+                    <td class="py-4 px-6 font-bold text-gray-800 dark:text-white">${yearName}</td>
                     <td class="py-4 px-6">
-                        <div class="text-sm">${year.Sem1Start || year.sem1Start || '-'} ถึง ${year.Sem1End || year.sem1End || '-'}</div>
+                        <div class="text-sm">${sem1Start} ถึง ${sem1End}</div>
                         <span class="px-2 py-1 text-xs rounded-full ${sem1Status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}">
                             ${sem1Status === 'ACTIVE' ? '🟢 เปิด' : '🔒 ปิด'}
                         </span>
                     </td>
                     <td class="py-4 px-6">
-                        <div class="text-sm">${year.Sem2Start || year.sem2Start || '-'} ถึง ${year.Sem2End || year.sem2End || '-'}</div>
+                        <div class="text-sm">${sem2Start} ถึง ${sem2End}</div>
                         <span class="px-2 py-1 text-xs rounded-full ${sem2Status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}">
                             ${sem2Status === 'ACTIVE' ? '🟢 เปิด' : '🔒 ปิด'}
                         </span>
@@ -357,8 +366,8 @@
                     <td class="py-4 px-6 text-center">
                         <div class="flex gap-2 justify-center">
                             ${!isActive ? `<button onclick="activateYear('${yearId}')" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm">เปิดใช้งาน</button>` : ''}
-                            <button onclick="toggleSemester('${yearId}', 1)" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-sm">ภาค 1</button>
-                            <button onclick="toggleSemester('${yearId}', 2)" class="px-3 py-1 bg-purple-500 hover:bg-purple-600 text-white rounded text-sm">ภาค 2</button>
+                            <button onclick="toggleSemester('${yearId}', 'Semester1')" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-sm">ภาค 1</button>
+                            <button onclick="toggleSemester('${yearId}', 'Semester2')" class="px-3 py-1 bg-purple-500 hover:bg-purple-600 text-white rounded text-sm">ภาค 2</button>
                         </div>
                     </td>
                 </tr>
@@ -389,7 +398,11 @@
 
             try {
                 const result = await API.saveAcademicYear({
-                    year, sem1Start, sem1End, sem2Start, sem2End
+                    YearName: year,
+                    Sem1Start: sem1Start,
+                    Sem1End: sem1End,
+                    Sem2Start: sem2Start,
+                    Sem2End: sem2End
                 });
 
                 if (result.success) {
@@ -405,13 +418,14 @@
             Utils.hideLoader();
         }
 
-        async function activateYear(year) {
-            if (!confirm(`ต้องการเปิดใช้งานปีการศึกษา ${year} หรือไม่?`)) return;
+        async function activateYear(yearId) {
+            if (!confirm(`ต้องการเปิดใช้งานปีการศึกษาที่เลือกหรือไม่?`)) return;
 
             Utils.showLoader();
 
             try {
-                const result = await API.setActiveYear(year);
+                // Fixed: API method name is activateYear, not setActiveYear
+                const result = await API.activateYear(yearId);
                 if (result.success) {
                     Utils.showNotification('เปลี่ยนปีการศึกษาสำเร็จ', 'success');
                     await loadYears();
